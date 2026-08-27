@@ -30,32 +30,33 @@ def set_sidebar_background(image_file):
             background-repeat: no-repeat;
         }}
         
-        /* 🌟 ตกแต่งกล่องเมนูและ Expander ใน Sidebar ให้เป็นสีเหลืองทองอร่ามแบบเจดีย์กระทบแดด */
+        /* 🌟 ตกแต่งกล่องเมนูและ Expander ใน Sidebar ให้เป็นสีเหลืองทองอร่าม */
         [data-testid="stSidebar"] [data-testid="stExpander"], 
         [data-testid="stSidebar"] button,
         [data-testid="stSidebar"] .stButton > button {{
-            background: linear-gradient(135deg, #FFF8DC 0%, #FFD700 50%, #DAA520 100%) !important; /* ไล่เฉดสีทองอร่าม */
-            border: 2px solid #FF8C00 !important; /* ขอบสีทองเข้ม/ส้มประกาย */
+            background: linear-gradient(135deg, #FFF8DC 0%, #FFD700 50%, #DAA520 100%) !important; 
+            border: 2px solid #FF8C00 !important; 
             border-radius: 16px !important; 
-            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.5) !important; /* เงาเรืองแสงสีทองสะท้อนแดด */
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important; 
+            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.5) !important; 
+            transition: all 0.3s ease !important; 
+            transform: none !important; /* 📌 บังคับห้ามขยับเด็ดขาด */
         }}
 
-        /* ✨ ลูกเล่นตอนเอาเมาส์ไปชี้เมนู Sidebar (Hover Effect เด้งดึ๋ง + ทองสว่างวิบวับ) */
+        /* ✨ ลูกเล่นตอนเอาเมาส์ไปชี้เมนู Sidebar (เปลี่ยนแค่สีสว่างขึ้น ไม่มีเอฟเฟกต์เด้ง) */
         [data-testid="stSidebar"] [data-testid="stExpander"]:hover, 
         [data-testid="stSidebar"] button:hover,
         [data-testid="stSidebar"] .stButton > button:hover {{
-            transform: translateY(-4px) scale(1.02) !important; 
             background: linear-gradient(135deg, #FFFFE0 0%, #FFC107 50%, #FF8C00 100%) !important; 
             border-color: #FF4500 !important; 
-            box-shadow: 0 8px 30px rgba(255, 165, 0, 0.8) !important; /* เงาสะท้อนประกายทองสว่างจ้า */
+            box-shadow: 0 8px 30px rgba(255, 165, 0, 0.8) !important; 
+            transform: none !important; /* 📌 บังคับห้ามขยับเด็ดขาด */
         }}
 
         /* 👑 ปรับตัวหนังสือใน Sidebar ให้คมชัดตัดกับพื้นหลังสีทอง */
         [data-testid="stSidebar"] [data-testid="stExpander"] summary p,
         [data-testid="stSidebar"] .stMarkdown p,
         [data-testid="stSidebar"] button p {{
-            color: #4A3B00 !important; /* ตัวหนังสือสีน้ำตาลทองเข้ม อ่านง่าย ตัดกับพื้นทอง */
+            color: #4A3B00 !important; 
             font-weight: bold !important;
             text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
         }}
@@ -65,7 +66,7 @@ def set_sidebar_background(image_file):
             font-weight: bold !important;
         }}
 
-        /* 📌 🌟 ตกแต่งกล่อง Popover เด้งดึ๋งตรงกลางให้เป็นสีทองอร่ามแพรวพราว */
+        /* 📌 🌟 ตกแต่งกล่อง Popover ตรงกลางให้เป็นสีทองอร่ามแพรวพราว */
         div[data-testid="stPopoverBody"] {{
             position: fixed !important; 
             top: 50% !important;                     
@@ -74,10 +75,10 @@ def set_sidebar_background(image_file):
             width: 450px !important;    
             max-height: 80vh !important;             
             overflow-y: auto !important; 
-            background: linear-gradient(135deg, #FFFDF0 0%, #FFF8DC 100%) !important; /* พื้นหลังสีทองอ่อนละมุน */
-            border: 2px solid #DAA520 !important; /* ขอบสีทอง */
+            background: linear-gradient(135deg, #FFFDF0 0%, #FFF8DC 100%) !important; 
+            border: 2px solid #DAA520 !important; 
             border-radius: 16px !important;
-            box-shadow: 0 8px 35px rgba(218, 165, 32, 0.5) !important; /* เงาเรืองแสงสีทองฟุ้งๆ */
+            box-shadow: 0 8px 35px rgba(218, 165, 32, 0.5) !important; 
             z-index: 999999 !important;
             padding: 15px !important;
         }}
@@ -89,14 +90,16 @@ def set_sidebar_background(image_file):
             border-radius: 12px !important;
             color: #4A3B00 !important;
             font-weight: bold !important;
-            transition: all 0.3s ease !important;
+            transition: all 0.3s ease !important; /* เปลี่ยนเป็นสมูท */
+            transform: none !important; /* 📌 บังคับห้ามขยับเด็ดขาด */
         }}
 
+        /* เปลี่ยนแค่สี ไม่ให้ปุ่มเด้งขยายตอน Hover */
         div[data-testid="stPopoverBody"] button:hover {{
             background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important;
             color: #FFFFFF !important;
-            transform: scale(1.02) !important;
             box-shadow: 0 4px 20px rgba(255, 165, 0, 0.6) !important;
+            transform: none !important; /* 📌 บังคับห้ามขยับเด็ดขาด */
         }}
         </style>
         """
@@ -115,7 +118,7 @@ if os.path.exists(lotus_img_path):
     with open(lotus_img_path, "rb") as f:
         lotus_base64 = base64.b64encode(f.read()).decode()
 
-# 3. ปรับแต่ง CSS หลักของหน้าเว็บ (จัดกึ่งกลางและขยับข้อความหัวข้อมาทางซ้าย)
+# 3. ปรับแต่ง CSS หลักของหน้าเว็บ
 st.markdown(f"""
     <style>
     html, body {{
@@ -130,7 +133,15 @@ st.markdown(f"""
         background-attachment: fixed !important;
     }}
     
-    /* 📌 ขยายพื้นที่แชทและดันเนื้อหาให้อยู่ตรงกลางจอพอดีตอนเปิดเว็บ */
+    /* 📌 ปิดการเด้งของปุ่มทั้งหมดในเว็บแบบถาวร หักล้างโค้ดที่ซ่อนอยู่ */
+    button:hover, 
+    .stButton > button:hover, 
+    div[data-testid="stExpander"]:hover,
+    div[data-testid="stPopoverBody"] button:hover {{
+        transform: none !important;
+    }}
+
+    /* 📌 ขยายพื้นที่แชท (สำหรับจอคอมพิวเตอร์) */
     .block-container {{
         max-width: 100% !important;
         width: 100% !important;
@@ -161,10 +172,10 @@ st.markdown(f"""
     .main-title, .sub-title {{
         text-align: center !important;
         width: 100% !important;
-        transform: translateX(-35px) !important; /* สามารถปรับเพิ่ม/ลดตัวเลขนี้ได้ เช่น -30px หรือ -40px */
+        transform: translateX(-35px) !important; 
     }}
 
-    /* 📌 ล็อคช่องพิมพ์ข้อความด้านล่างให้อยู่กับที่ */
+    /* 📌 ล็อคช่องพิมพ์ข้อความด้านล่างให้อยู่กับที่ (สำหรับจอคอม) */
     [data-testid="stChatInput"] {{
         position: fixed !important;
         bottom: 20px !important;
@@ -222,6 +233,52 @@ st.markdown(f"""
     @keyframes spin {{
         0% {{ transform: rotate(0deg); }}
         100% {{ transform: rotate(360deg); }}
+    }}
+
+    /* 🚫 ซ่อนเมนูด้านบนและ Footer ด้านล่างของ Streamlit */
+    header[data-testid="stHeader"] {{
+        display: none !important;
+    }}
+    .stApp > header {{
+        display: none !important;
+    }}
+    #MainMenu {{
+        visibility: hidden !important;
+    }}
+    footer {{
+        display: none !important;
+    }}
+    .viewerBadge_container_link, .viewerBadge_link {{
+        display: none !important;
+    }}
+
+    /* ========================================================
+       📱 แก้ไขสำหรับมือถือโดยเฉพาะ (ให้แชทกว้างเต็มจอแบบ Gemini)
+       ======================================================== */
+    @media (max-width: 768px) {{
+        /* ลดขอบซ้ายขวาของหน้าจอหลักลง ให้กินพื้นที่น้อยที่สุด */
+        .block-container {{
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+            padding-top: 6rem !important;
+        }}
+        
+        /* ขยายกล่องแชทฝั่ง User ให้กว้างเกือบเต็มจอ */
+        .stChatMessage[data-testid="stChatMessage"]:has(div[aria-label="Chat message from user"]) {{
+            max-width: 95% !important;
+        }}
+        
+        /* ขยายกล่องแชทฝั่ง AI ให้กว้างเกือบเต็มจอ */
+        .stChatMessage[data-testid="stChatMessage"]:has(div[aria-label="Chat message from assistant"]) {{
+            max-width: 95% !important;
+        }}
+
+        /* จัดช่องพิมพ์ด้านล่างให้สมดุลและอยู่ตรงกลางจอ */
+        [data-testid="stChatInput"] {{
+            width: 95% !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+        }}
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -315,7 +372,7 @@ if prompt_container:
         st.session_state.messages.append(message_data)
         st.rerun()
 
-# 10. สคริปต์ Auto-scroll (จะทำงานเฉพาะเมื่อมีการสนทนาเกิดขึ้นแล้วเท่านั้น)
+# 10. สคริปต์ Auto-scroll
 if len(st.session_state.messages) > 0:
     components.html(
         """
