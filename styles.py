@@ -80,29 +80,33 @@ def get_ui_css():
     }}
     
     /* ---------------------------------------------------
-       📌 โค้ดส่วนที่เพิ่มใหม่: จัดการช่องแชทบนมือถือให้อยู่ตรงกลาง 
+       📌 โค้ดส่วนแก้ไข Mobile Responsive (บังคับกึ่งกลาง 100%)
        --------------------------------------------------- */
-    
-    /* จัดช่องพิมพ์แชทด้านล่างให้สมดุล */
-    [data-testid="stChatInput"] {{
-        margin-left: auto !important;
-        margin-right: auto !important;
-    }}
-
-    /* ปรับขนาดเวลาเปิดบนหน้าจอมือถือ (Mobile View) */
-    @media screen and (max-width: 768px) {{
-        [data-testid="stChatInput"] {{
-            width: 100% !important;
+    @media (max-width: 768px) {{
+        /* 1. จัดขอบหน้าจอหลักไม่ให้กินพื้นที่ด้านข้าง */
+        .stApp .main .block-container {{
             padding-left: 15px !important;
             padding-right: 15px !important;
         }}
         
-        /* ลดขอบซ้ายขวาของหน้าจอหลักในมือถือไม่ให้กินพื้นที่ */
-        [data-testid="stMainBlockContainer"], .main .block-container {{
-            padding: 15px 10px !important;
+        /* 2. จัดระเบียบกล่องหุ้มช่องแชทด้านล่างสุดของ Streamlit */
+        div[data-testid="stBottomBlockContainer"] {{
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }}
+
+        /* 3. บังคับช่องพิมพ์แชทให้อยู่กึ่งกลางหน้าจอ */
+        div[data-testid="stChatInput"] {{
+            width: 95% !important;
+            max-width: 95% !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            padding-bottom: 15px !important;
+            display: flex !important;
+            justify-content: center !important;
         }}
         
-        /* ปรับขนาดกล่องแชท AI ไม่ให้ล้นจอ */
+        /* 4. ปรับขนาดกล่องแชทข้อความ AI ไม่ให้ล้นจอ */
         .stChatMessage {{
             max-width: 95% !important;
         }}
