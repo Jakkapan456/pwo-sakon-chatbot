@@ -1,7 +1,8 @@
 import streamlit as st
 import os
+import base64
 
-# 📌 โครงสร้างข้อมูล 1: หมวดกรมต่างๆ (เปลี่ยนคำสั่งเป็น URL ของแต่ละเรื่อง)
+# 📌 โครงสร้างข้อมูล 1: หมวดกรมต่างๆ
 DEPARTMENTS_DATA = {
     "กรมกิจการเด็กเเละเยาวชน ": [
         ("🔎ข้อมูล และจุดบริการภาครัฐ เกี่ยวกับเด็กเเละเยาวชน", "https://www.info.go.th/search?lat=13.7588311&lng=100.5405449&search=%E0%B9%80%E0%B8%94%E0%B9%87%E0%B8%81"),
@@ -100,7 +101,7 @@ DEPARTMENTS_DATA = {
     ]
 }
 
-# 📌 โครงสร้างข้อมูล 2: หมวดกฎหมาย (ปุ่มให้ AI ตอบ)
+# 📌 โครงสร้างข้อมูล 2: หมวดกฎหมาย
 LAW_QUESTIONS = [
     ("หมวดกฎหมายเด็กและเยาวชน", "ขณะนี้ผู้ใช้เลือก [หมวดกฎหมายเด็กและเยาวชน] กรุณากล่าวต้อนรับสั้นๆ บอกภาพรวมของหมวดนี้ใน 2-3 บรรทัด และบอกว่าผู้ใช้สามารถพิมพ์สอบถามประเด็นกฎหมายหรือสิทธิเด็กที่สงสัยเข้ามาได้เลย"),
     ("หมวดกฎหมายสตรีและสถาบันครอบครัว", "ขณะนี้ผู้ใช้เลือก [หมวดกฎหมายสตรีและสถาบันครอบครัว] กรุณากล่าวต้อนรับสั้นๆ บอกภาพรวมของหมวดนี้ใน 2-3 บรรทัด และบอกว่าผู้ใช้สามารถพิมพ์สอบถามประเด็นกฎหมายที่สงสัยเข้ามาได้เลย"),
@@ -128,15 +129,12 @@ def render_sidebar():
             
         st.markdown("---")
         
-        # 📌 สร้างลิ้นชักที่ 1: ข้อมูลสิทธิสวัสดิการทั่วไป (ข้างในเป็น Popover -> ลิงก์)
         with st.expander(" ข้อมูลสิทธิสวัสดิการทั่วไป", expanded=False):
             for dept_name, sub_items in DEPARTMENTS_DATA.items():
                 with st.popover(dept_name, use_container_width=True):
-                    # ใช้ st.link_button เพื่อให้เปิดหน้าเว็บได้
                     for sub_label, link_url in sub_items:
                         st.link_button(sub_label, link_url, use_container_width=True)
 
-        # 📌 สร้างลิ้นชักที่ 2: ดาวน์โหลดแบบฟอร์มเอกสาร 
         with st.expander(" แบบฟอร์มเอกสารสิทธิสวัสดิการต่างๆ (คลิกเพื่อดาวน์โหลด)", expanded=False):
             form_path = "forms"
             if os.path.exists(form_path):
@@ -155,7 +153,6 @@ def render_sidebar():
                                 use_container_width=True
                             )
             
-        # 📌 สร้างลิ้นชักที่ 3: คำถามเกี่ยวกับ พ.ร.บ กฎหมาย พม. 
         with st.expander(" คำถามเกี่ยวกับ พ.ร.บ กฎหมาย พม.", expanded=False):
             for idx, (label, prompt_text) in enumerate(LAW_QUESTIONS):
                 if st.button(label, key=f"law_btn_{idx}", use_container_width=True):
@@ -167,20 +164,21 @@ def render_sidebar():
                     st.rerun()
 
 def render_header():
-    """แสดงส่วนหัวและโลโก้หน้าแรก"""
-    # 📌 แก้ไขสัดส่วนคอลัมน์เพื่อขยับโลโก้ไปทางขวา (เลขแรกปรับเป็น 2.2 จากเดิม 2)
-    _, col2, _ = st.columns([2.2, 1, 1.8])
-    with col2:
-        try:
-            st.image("logo_new.png", width=100)
-        except Exception:
-            pass
+    """📌 แก้ไขใหม่หมด: แสดงส่วนหัวและโลโก้แบบกึ่งกลาง 100% ทุกหน้าจอ (ไม่ใช้ Columns)"""
+    # 1. แปลงรูปภาพโลโก้ให้เป็นโค้ด Base64 เพื่อให้ฝังใน HTML ได้สมบูรณ์
+    logo_base64 = ""
+    if os.path.exists("logo_new.png"):
+        with open("logo_new.png", "rb") as f:
+            logo_base64 = base64.b64encode(f.read()).decode()
+    
+    # 2. จัดวางรูปและข้อความโดยใช้ HTML Flexbox (บังคับให้อยู่ตรงกลางของจอเสมอ)
+    img_html = f"<img src='data:image/png;base64,{logo_base64}' width='100' style='margin-bottom: 10px;'>" if logo_base64 else ""
 
-    # 📌 เพิ่มคำสั่ง margin-left: 30px; เพื่อดันข้อความไปทางขวา
-    st.markdown("""
-        <div style='text-align: center; margin-left: 30px; margin-bottom: 20px;'>
-            <div class='main-title'>AI ผู้ช่วยสิทธิสวัสดิการ</div>
-            <div class='sub-title'>สำนักงานพัฒนาสังคมและความมั่นคงของมนุษย์จังหวัดสกลนคร </div>
+    st.markdown(f"""
+        <div style='display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%; margin-bottom: 20px;'>
+            {img_html}
+            <div style='font-size: 24px; font-weight: bold; color: #333;'>AI ผู้ช่วยสิทธิสวัสดิการ</div>
+            <div style='font-size: 16px; color: #555;'>สำนักงานพัฒนาสังคมและความมั่นคงของมนุษย์จังหวัดสกลนคร</div>
         </div>
         <hr>
     """, unsafe_allow_html=True)
@@ -192,16 +190,13 @@ def render_quick_buttons():
     cols = st.columns(2)
     idx = 0
     
-    # 1. นำหมวดกรมต่างๆ (Popover -> ลิงก์) มาแสดง
     for dept_name, sub_items in DEPARTMENTS_DATA.items():
         with cols[idx % 2]:
             with st.popover(dept_name, use_container_width=True):
-                # ใช้ st.link_button เพื่อให้เปิดหน้าเว็บได้
                 for sub_label, link_url in sub_items:
                     st.link_button(sub_label, link_url, use_container_width=True)
         idx += 1
 
-    # 2. นำหมวดกฎหมาย (ปุ่มปกติ) มาแสดงต่อท้าย
     for label, prompt_text in LAW_QUESTIONS:
         with cols[idx % 2]:
             if st.button(label, key=f"main_law_{idx}", use_container_width=True):
