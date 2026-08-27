@@ -5,7 +5,6 @@ import os
 DEPARTMENTS_DATA = {
     "กรมกิจการเด็กเเละเยาวชน ": [
         ("🔎ข้อมูล และจุดบริการภาครัฐ เกี่ยวกับเด็กเเละเยาวชน", "https://www.info.go.th/search?lat=13.7588311&lng=100.5405449&search=%E0%B9%80%E0%B8%94%E0%B9%87%E0%B8%81"),
-
         ("💻เด็กเเรกเกิด", "https://csgproject.dcy.go.th/login.do"),
         ("💻ระบบสารสนเทศเพื่อการคุ้มครองเด็ก", "https://cpis.dcy.go.th/officer-login"),
         ("💻ประเมินสถานพัฒนาเด็กปฐมวัยออนไลน์", "https://ecdis.dcy.go.th/"),
@@ -16,11 +15,7 @@ DEPARTMENTS_DATA = {
         ("💻ระบบสวัสดิการเด็กและครอบครัว", "https://welfare.dcy.go.th/"),
         ("💻ระบบติดตามการใช้บริการ พม", "https://status.m-society.go.th/main"),
         ("💻แอปพลิเคชั่น", "https://www.dcy.go.th/content/1636520311278/1689689138655"),
-
         ("Dashboard รายงานข้อมูลของเด็กเเละเยาวชน", "https://dcy.go.th/"),
-      
-
-
     ],
     "กรมกิจการผู้สูงอายุ ": [
         ("🔎ข้อมูล และจุดบริการภาครัฐ เกี่ยวกับผู้สูงอายุ", "https://www.info.go.th/search?tag_cate_id=94fc5592-b810-472f-a4b7-2cae35ee2f91"),
@@ -28,7 +23,6 @@ DEPARTMENTS_DATA = {
         ("🖥️ระบบให้บริการกู้ยืมเงินทุนประกอบการอาชีพ", "https://odf.dop.go.th/login"),
         ("🖥️หลักสูตรออนไลน์การดูเเลผู้สูงอายุขั้นเบื้องต้นจํานวน 18 ชั่วโมง", "https://thaielderlycare.dop.go.th/"),
         ("🖥️ร้องเรียนการทุจริตเเละประพฤติมิชอบ", "https://www.dop.go.th/th/formcomplaint"),
-
         ("📲การให้บริการสงเคราะห์ผู้สูงอายุในภาวะยากลําบาก", "https://www.dop.go.th/thai/service_information/1/15"),
         ("📲การสนับสนุนการจัดการศพผู้สูงอายุตามประเพณี", "https://www.dop.go.th/thai/service_information/1/15"),
         ("📲การปรับสภาพเเวดล้อมเเละสิ่งอํานวยควาสะดวก", "https://www.dop.go.th/thai/service_information/1/15"),
@@ -37,7 +31,6 @@ DEPARTMENTS_DATA = {
         ("YouTube", "https://www.youtube.com/channel/UCNECvcwNQNyuf21jRdRY-TQ"),
         ("Instagram", "https://www.instagram.com/olderfund?utm_source=qr"),
         ("Line", "https://lin.ee/mGAwGbl"),
-        
     ],
     "กรมกิจการสตรีและสถาบันครอบครัว ": [
         ("🌐ปักหมุด หยุดเหตุ", "https://www.dwf.go.th/contents/36953"),
@@ -57,9 +50,6 @@ DEPARTMENTS_DATA = {
         ("🚨ร้องเรียนการทุจริต", "https://complain.dwf.go.th/public/fraudComplaint.do"),
         ("🚨มาตรการและแนวทางการจัดการเรื่องร้องเรียนการทุจริตและประพฤติมิชอบ", "https://dwf.go.th/contents/72191"),
         ("📞ติดต่อเรา กรมกิจการสตรีและสถาบันครอบครัว (สค.)", "https://www.dwf.go.th/contents/130"),
-
-
-
     ],
     "กรมส่งเสริมเเละพัฒนาคุณภาพชีวิตคนพิการ": [
         ("🪪บัตรประจําตัวคนพิการ", "https://dep.go.th/th/rights-welfares-services/disabled-person-id-card"),
@@ -91,9 +81,6 @@ DEPARTMENTS_DATA = {
         ("📑คู่มือการจัดสิ่งอำนวยความสะดวกสำหรับคนพิการ", "https://dep.go.th/th/rights-welfares-services/%E0%B8%84%E0%B8%B9%E0%B9%88%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%84%E0%B8%99%E0%B8%9E%E0%B8%B4%E0%B8%81%E0%B8%B2%E0%B8%A3/%E0%B8%84%E0%B8%B9%E0%B9%88%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%88%E0%B8%B1%E0%B8%94%E0%B8%AA%E0%B8%B4%E0%B9%88%E0%B8%87%E0%B8%AD%E0%B8%B3%E0%B8%99%E0%B8%A7%E0%B8%A2%E0%B8%84%E0%B8%A7%E0%B8%B2%E0%B8%A1%E0%B8%AA%E0%B8%B0%E0%B8%94%E0%B8%A7%E0%B8%81%E0%B8%AA%E0%B8%B3%E0%B8%AB%E0%B8%A3%E0%B8%B1%E0%B8%9A%E0%B8%84%E0%B8%99%E0%B8%9E%E0%B8%B4%E0%B8%81%E0%B8%B2%E0%B8%A3"),
         ("📖คู่มือการปฏิบัติงานให้บริการประชาชน", "https://dep.go.th/th/rights-welfares-services/%E0%B8%84%E0%B8%B9%E0%B9%88%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%84%E0%B8%99%E0%B8%9E%E0%B8%B4%E0%B8%81%E0%B8%B2%E0%B8%A3/%E0%B8%84%E0%B8%B9%E0%B9%88%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%9B%E0%B8%8F%E0%B8%B4%E0%B8%9A%E0%B8%B1%E0%B8%95%E0%B8%B4%E0%B8%87%E0%B8%B2%E0%B8%99%E0%B9%83%E0%B8%AB%E0%B9%89%E0%B8%9A%E0%B8%A3%E0%B8%B4%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%8A%E0%B8%B2%E0%B8%8A%E0%B8%99"),
         ("🗂️คู่มือการดำเนินงานศูนย์บริการคนพิการ", "https://dep.go.th/th/rights-welfares-services/%E0%B8%84%E0%B8%B9%E0%B9%88%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%84%E0%B8%99%E0%B8%9E%E0%B8%B4%E0%B8%81%E0%B8%B2%E0%B8%A3/%E0%B8%84%E0%B8%B9%E0%B9%88%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%94%E0%B8%B3%E0%B9%80%E0%B8%99%E0%B8%B4%E0%B8%99%E0%B8%87%E0%B8%B2%E0%B8%99%E0%B8%A8%E0%B8%B9%E0%B8%99%E0%B8%A2%E0%B9%8C%E0%B8%9A%E0%B8%A3%E0%B8%B4%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%84%E0%B8%99%E0%B8%9E%E0%B8%B4%E0%B8%81%E0%B8%B2%E0%B8%A3"),
-
-
-        
     ],
     "กรมพัฒนาสังคมและสวัสดิการ ": [
         ("💵การขอรับเงินอุดหนุนเงินสงเคราะห์", "https://service.dsdw.go.th/Service/01"),
@@ -106,15 +93,10 @@ DEPARTMENTS_DATA = {
         ("💰การขอรับเงินสำหรับองค์กร", "https://service.dsdw.go.th/Service/07"),
         ("🌐การบริการด้านอื่น ๆ", "https://service.dsdw.go.th/Service/08"),
         ("📹วิดีโอคู่มือการใช้งานบริการต่างๆของกรมพัฒนาสังคมเเละสวัสดิการ", "https://service.dsdw.go.th/Service/Tutorial"),
-       
-
-
     ],
     "สํานักงานปลัดกระทรวงการพัฒนาสังคมฯ ": [
         ("🚨ต่อต้านการค้ามนุษย์", "https://e-aht.com/"),
         ("🏘️สถาบันพัฒนาองค์กรชุมชน", "https://web.codi.or.th/e-service/"),
-     
-
     ]
 }
 
@@ -186,15 +168,17 @@ def render_sidebar():
 
 def render_header():
     """แสดงส่วนหัวและโลโก้หน้าแรก"""
-    _, col2, _ = st.columns([2, 1, 2])
+    # 📌 แก้ไขสัดส่วนคอลัมน์เพื่อขยับโลโก้ไปทางขวา (เลขแรกปรับเป็น 2.2 จากเดิม 2)
+    _, col2, _ = st.columns([2.2, 1, 1.8])
     with col2:
         try:
             st.image("logo_new.png", width=100)
         except Exception:
             pass
 
+    # 📌 เพิ่มคำสั่ง margin-left: 30px; เพื่อดันข้อความไปทางขวา
     st.markdown("""
-        <div style='text-align: center; margin-bottom: 20px;'>
+        <div style='text-align: center; margin-left: 30px; margin-bottom: 20px;'>
             <div class='main-title'>AI ผู้ช่วยสิทธิสวัสดิการ</div>
             <div class='sub-title'>สำนักงานพัฒนาสังคมและความมั่นคงของมนุษย์จังหวัดสกลนคร </div>
         </div>
