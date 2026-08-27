@@ -65,4 +65,12 @@ def get_ui_css():
         background: linear-gradient(135deg, #e91e63, #ff4081); color: white; padding: 10px 16px; 
         border-radius: 18px 18px 2px 18px; box-shadow: 0 4px 10px rgba(233,30,99,0.2); font-weight: 500; word-break: break-word; 
     }}
+
+    /* 5. 📌 ซ่อนโลโก้ Streamlit และปุ่มสีแดง/ม่วงมุมล่างขวาออกทั้งหมด */
+    #MainMenu {{visibility: hidden;}}
+    footer {{visibility: hidden;}}
+    .stAppDeployButton {{display: none !important;}}
+    [data-testid="stStatusWidget"] {{display: none !important;}}
+    div[class*="viewerBadge"] {{display: none !important;}}
+    .styles_viewerBadge__1yG5_ {{display: none !important;}}
     </style>"""
