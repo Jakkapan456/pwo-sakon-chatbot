@@ -9,7 +9,7 @@ def get_ui_css():
             img_base64 = base64.b64encode(f.read()).decode()
 
     return f"""<style>
-    /* 1. 📌 แก้ปัญหาช่องแชทเบี้ยว: ย้ายพื้นหลังมาไว้ที่ .main แทน จะได้ไม่กวนการจัดหน้าของระบบ */
+    /* 1. พื้นหลังหลัก */
     .stApp {{ background: #fff5f8; }}
     .main {{
         background-image: linear-gradient(rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.86)), url("data:image/jpeg;base64,{img_base64}") !important;
@@ -18,18 +18,28 @@ def get_ui_css():
         background-attachment: fixed !important;
     }}
 
-    /* 2. 📌 ทำให้แถบด้านบนและปุ่มลิ้นชักชัดเจนแบบแอป Gemini */
-    .stApp > header {{
-        background-color: rgba(255, 255, 255, 0.95) !important; /* แถบด้านบนสีขาว */
-        border-bottom: 1px solid #ffeef3 !important;
-    }}
+    /* 2. 📌 บังคับแปลงโฉมปุ่มเปิด-ปิดเมนู (ให้เป็นปุ่มกลมลอยเด่นอยู่มุมซ้ายบน มองเห็นชัดเจนใน Messenger) */
     [data-testid="collapsedControl"] {{
-        color: #e91e63 !important; /* เปลี่ยนสีไอคอนให้เป็นสีชมพูเข้ม จะได้เด่นๆ */
+        display: flex !important;
+        visibility: visible !important;
+        position: fixed !important;
+        top: 15px !important;
+        left: 15px !important;
+        z-index: 999999 !important;
+        background-color: white !important;
+        border: 2px solid #ff80ab !important;
+        border-radius: 50% !important;
+        width: 45px !important;
+        height: 45px !important;
+        box-shadow: 0 4px 12px rgba(233,30,99,0.3) !important;
+        justify-content: center !important;
+        align-items: center !important;
     }}
+    
     [data-testid="collapsedControl"] svg {{
-        width: 1.8rem !important;
-        height: 1.8rem !important;
         fill: #e91e63 !important;
+        width: 24px !important;
+        height: 24px !important;
     }}
 
     /* 3. ดีไซน์ปุ่มกด */
