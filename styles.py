@@ -9,30 +9,51 @@ def get_ui_css():
             img_base64 = base64.b64encode(f.read()).decode()
 
     return f"""<style>
+    /* =========================================
+       1. สีพื้นหลัง และ ปุ่มต่างๆ
+       ========================================= */
     .stApp {{ background: linear-gradient(180deg, #fff5f8 0%, #ffeef3 100%); }}
-    .stButton>button {{ width: 100%; border-radius: 20px; border: 1px solid #ff80ab; color: #e91e63; font-weight: bold; background: white; margin-bottom: 4px; }}
     
+    .stButton>button {{ 
+        width: 100%; border-radius: 20px; border: 1px solid #ff80ab; 
+        color: #e91e63; font-weight: bold; background: white; margin-bottom: 4px; 
+    }}
+    .stButton>button:hover {{ 
+        background: linear-gradient(135deg, #e91e63, #ff4081); color: white !important; transform: translateY(-2px); 
+    }}
+    
+    /* 📌 พื้นหลังรูปบึงบัว */
     [data-testid="stMainBlockContainer"], .main .block-container {{
         background-image: linear-gradient(rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.86)), url("data:image/jpeg;base64,{img_base64}") !important;
-        background-size: cover !important; background-position: center !important; border-radius: 20px; padding: 15px;
+        background-size: cover !important; background-position: center !important; border-radius: 20px;
     }}
-    
-    .stChatMessage {{ border-radius: 18px !important; padding: 12px 16px !important; margin-bottom: 12px !important; background: linear-gradient(145deg, #fff 0%, #fff0f5 100%) !important; border: 1px solid rgba(248,187,208,0.8) !important; }}
-    [data-testid="stChatMessageAvatarAssistant"] {{ background: white !important; border: 2px solid #ff80ab !important; border-radius: 50% !important; }}
+
+    /* =========================================
+       2. ดีไซน์กล่องข้อความแชท (AI และ User)
+       ========================================= */
+    .stChatMessage {{ 
+        border-radius: 18px !important; padding: 12px 16px !important; margin-bottom: 12px !important; 
+        background: linear-gradient(145deg, #fff 0%, #fff0f5 100%) !important; 
+        border: 1px solid rgba(248,187,208,0.8) !important; box-shadow: 0 6px 16px rgba(233,30,99,0.06) !important; 
+    }}
+    [data-testid="stChatMessageAvatarAssistant"] {{ 
+        background: white !important; border: 2px solid #ff80ab !important; border-radius: 50% !important; 
+    }}
     
     .user-container {{ display: flex; justify-content: flex-end; margin-bottom: 12px; width: 100%; }}
-    .user-bubble {{ background: linear-gradient(135deg, #e91e63, #ff4081); color: white; padding: 10px 16px; border-radius: 18px 18px 2px 18px; max-width: 85%; font-weight: 500; }}
-
-    /* ล้างการบังคับตำแหน่งออก ปล่อยให้ Streamlit จัดกึ่งกลางเองตามธรรมชาติ */
-    div[data-testid="stChatInput"] {{
-        width: 100% !important;
-        margin: 0 auto !important;
+    .user-bubble {{ 
+        background: linear-gradient(135deg, #e91e63, #ff4081); color: white; padding: 10px 16px; 
+        border-radius: 18px 18px 2px 18px; box-shadow: 0 4px 12px rgba(233,30,99,0.25); font-weight: 500; word-break: break-word; 
     }}
-    
-    /* ปรับแค่กรอบใสๆ ด้านล่างให้เว้นขอบซ้าย-ขวาพอดี */
-    div[data-testid="stBottomBlockContainer"] {{
-        background: transparent !important;
-        padding-left: 15px !important;
-        padding-right: 15px !important;
+
+    /* =========================================
+       3. ปรับขอบหน้าจอสำหรับมือถือ (ให้ Streamlit จัดช่องแชทเอง)
+       ========================================= */
+    @media (max-width: 768px) {{
+        /* ปรับแค่ระยะขอบซ้ายขวาของหน้าจอหลักเท่านั้น เพื่อไม่ให้ไปตีกับช่องแชทของระบบ */
+        .stApp .main .block-container {{
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }}
     }}
     </style>"""
