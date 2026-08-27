@@ -235,13 +235,35 @@ st.markdown(f"""
         100% {{ transform: rotate(360deg); }}
     }}
 
-    /* 🚫 ซ่อนเมนูด้านบนและ Footer ด้านล่างของ Streamlit */
+    /* 🚫 ซ่อน Header ส่วนเกิน แต่คงปุ่มเปิด-ปิดเมนู Sidebar ไว้ให้แสดงเป็นปุ่มลอย */
     header[data-testid="stHeader"] {{
-        display: none !important;
+        background: transparent !important;
     }}
-    .stApp > header {{
-        display: none !important;
+    
+    /* 📌 บังคับให้ปุ่มเปิด-ปิดเมนู Sidebar (Hamburger) แสดงผลเป็นปุ่มลอยเด่นมุมซ้ายบน */
+    [data-testid="collapsedControl"] {{
+        display: flex !important;
+        visibility: visible !important;
+        position: fixed !important;
+        top: 15px !important;
+        left: 15px !important;
+        z-index: 999999 !important;
+        background-color: #ffffff !important;
+        border: 2px solid #FF80AB !important;
+        border-radius: 50% !important;
+        width: 45px !important;
+        height: 45px !important;
+        box-shadow: 0 4px 12px rgba(233, 30, 99, 0.3) !important;
+        justify-content: center !important;
+        align-items: center !important;
     }}
+    
+    [data-testid="collapsedControl"] svg {{
+        fill: #E91E63 !important;
+        width: 24px !important;
+        height: 24px !important;
+    }}
+
     #MainMenu {{
         visibility: hidden !important;
     }}
