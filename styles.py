@@ -78,4 +78,33 @@ def get_ui_css():
         font-weight: 500; 
         word-break: break-word; 
     }}
+    
+    /* ---------------------------------------------------
+       📌 โค้ดส่วนที่เพิ่มใหม่: จัดการช่องแชทบนมือถือให้อยู่ตรงกลาง 
+       --------------------------------------------------- */
+    
+    /* จัดช่องพิมพ์แชทด้านล่างให้สมดุล */
+    [data-testid="stChatInput"] {{
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }}
+
+    /* ปรับขนาดเวลาเปิดบนหน้าจอมือถือ (Mobile View) */
+    @media screen and (max-width: 768px) {{
+        [data-testid="stChatInput"] {{
+            width: 100% !important;
+            padding-left: 15px !important;
+            padding-right: 15px !important;
+        }}
+        
+        /* ลดขอบซ้ายขวาของหน้าจอหลักในมือถือไม่ให้กินพื้นที่ */
+        [data-testid="stMainBlockContainer"], .main .block-container {{
+            padding: 15px 10px !important;
+        }}
+        
+        /* ปรับขนาดกล่องแชท AI ไม่ให้ล้นจอ */
+        .stChatMessage {{
+            max-width: 95% !important;
+        }}
+    }}
     </style>"""
