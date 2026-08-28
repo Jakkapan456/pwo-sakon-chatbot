@@ -3,6 +3,8 @@ import streamlit.components.v1 as components
 import base64
 import os
 import re
+import qrcode
+from io import BytesIO
 from responses import get_ai_response
 from components import render_header, render_sidebar
 from PIL import Image
@@ -80,7 +82,7 @@ if os.path.exists(lotus_img_path):
     with open(lotus_img_path, "rb") as f:
         lotus_base64 = base64.b64encode(f.read()).decode()
 
-# 3. ปรับแต่ง CSS หลัก (เคลียร์เส้นขอบแชท และเว้นระยะพ้นกล่องพิมพ์)
+# 3. ปรับแต่ง CSS หลัก (ซ่อน Sidebar สนิทบนมือถือ และเคลียร์ขอบแชท)
 st.markdown(f"""
     <style>
     html, body {{
@@ -145,7 +147,7 @@ st.markdown(f"""
         display: none !important;
     }}
 
-    /* 📌 เคลียร์เส้นขอบ เส้นประ และพื้นหลังตกค้างในกล่องข้อความทั้งหมดแบบเบ็ดเสร็จ */
+    /* 📌 เคลียร์เส้นขอบแชท */
     [data-testid="stChatMessage"] {{
         padding: 12px 16px !important;
         font-size: 15px !important;
@@ -171,7 +173,7 @@ st.markdown(f"""
         border: 1px solid #FFB6C1 !important;
     }}
 
-    /* แชทผู้ช่วย AI ชิดซ้าย สีขาวสะอาด ไร้เส้นกวนใจ */
+    /* แชทผู้ช่วย AI ชิดซ้าย สีขาวสะอาด */
     [data-testid="stChatMessage"]:has(div[aria-label="Chat message from assistant"]) {{
         background-color: #FFFFFF !important;
         margin-left: 0 !important;
@@ -183,12 +185,7 @@ st.markdown(f"""
     }}
 
     /* 📱 ปรับแต่งสำหรับหน้าจอมือถือ */
-    @media (max-width: 768px) {{
-        [data-testid="stSidebar"] {{
-            width: 100% !important;
-            max-width: 100% !important;
-            min-width: 100% !important;
-        }}
+    @media (max-width: 768px) {
         .block-container {{
             padding-left: 0.8rem !important;
             padding-right: 0.8rem !important;
@@ -207,7 +204,7 @@ st.markdown(f"""
             box-shadow: 0 -4px 15px rgba(0,0,0,0.15) !important;
             border-radius: 12px !important;
         }}
-    }}
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -222,18 +219,27 @@ render_sidebar()
 if len(st.session_state.messages) == 0:
     render_header()
 
-# 7. ฟังก์ชันช่วยแกะลิงก์ URL ออกมาจากข้อความของ AI เพื่อแปลงเป็นปุ่มกดภายนอก
+# 7. ฟังก์ชันสร้าง QR Code และปุ่มลิงก์ภายนอก
+def generate_qrcode_image(url):
+    qr = qrcode.QRCode(version=1, box_size=10, border=2)
+    qr.add_data(url)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    buffered = BytesIO()
+    img.save(buffered, format="PNG")
+    return buffered.getvalue()
+
 def extract_links_and_render(text):
     st.markdown(text, unsafe_allow_html=True)
-    # ค้นหา URL ทั้งหมดในข้อความ (http:// หรือ https://)
     urls = re.findall(r'(https?://[^\s]+)', text)
     if urls:
         st.markdown("---")
-        st.write("🌐 **เปิดเว็บไซต์ / เอกสารภายนอกในเบราว์เซอร์:**")
         for i, url in enumerate(set(urls)):
-            # ทำความสะอาด URL เผื่อติดเครื่องหมายปิดท้าย
             clean_url = url.strip('.,)];?>')
-            st.link_button(f"🔗 เปิดลิงก์ภายนอก (หน้าที่ {i+1})", clean_url, use_container_width=True)
+            st.info(f"📱 **QR Code สำหรับสแกนเปิดเว็บไซต์ภายนอก (หน้าที่ {i+1}):**")
+            qr_bytes = generate_qrcode_image(clean_url)
+            st.image(qr_bytes, width=180)
+            st.link_button(f"🌐 คลิกเปิดเว็บไซต์ภายนอก (หน้าที่ {i+1})", clean_url, use_container_width=True)
 
 # 8. แสดงกล่องแชททั้งหมด
 for message in st.session_state.messages:
@@ -309,35 +315,41 @@ if prompt_container:
         
     if user_text or uploaded_files:
         st.session_state.messages.append(message_data)
-        
-        # 📌 สั่งพับเก็บ Sidebar อัตโนมัติทันทีจากฝั่ง Python เมื่อกดส่งข้อความ
         st.session_state.sidebar_state = "collapsed"
         st.rerun()
 
-# 11. สคริปต์ JavaScript: เลื่อนแชทลงล่างอัตโนมัติ
+# 11. สคริปต์ JavaScript: สั่งจำลองคลิกซ่อน Sidebar อัตโนมัติ + เลื่อนแชทลงล่าง
 if len(st.session_state.messages) > 0:
     components.html(
         """
         <script>
-            function forceScrollToBottom() {
-                const mainSection = window.parent.document.querySelector('section.main');
-                if (mainSection) {
-                    mainSection.scrollTo({
-                        top: mainSection.scrollHeight,
+            function autoCloseSidebarAndScroll() {
+                const doc = window.parent.document;
+                
+                // สั่งคลิกพื้นที่หลักเพื่อบังคับพับ Sidebar อัตโนมัติ
+                const mainArea = doc.querySelector('section.main');
+                if (mainArea) {
+                    mainArea.click();
+                }
+
+                // เลื่อนหน้าจอแชทลงด้านล่างสุด
+                if (mainArea) {
+                    mainArea.scrollTo({
+                        top: mainArea.scrollHeight,
                         behavior: 'smooth'
                     });
                 }
 
-                const chatMessages = window.parent.document.querySelectorAll('[data-testid="stChatMessage"]');
+                const chatMessages = doc.querySelectorAll('[data-testid="stChatMessage"]');
                 if (chatMessages.length > 0) {
                     const lastMessage = chatMessages[chatMessages.length - 1];
                     lastMessage.scrollIntoView({ behavior: 'smooth', block: 'end' });
                 }
             }
 
-            forceScrollToBottom();
-            setTimeout(forceScrollToBottom, 50);
-            setTimeout(forceScrollToBottom, 150);
+            autoCloseSidebarAndScroll();
+            setTimeout(autoCloseSidebarAndScroll, 50);
+            setTimeout(autoCloseSidebarAndScroll, 150);
         </script>
         """,
         height=0,
