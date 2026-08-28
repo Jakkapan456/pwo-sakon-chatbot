@@ -295,27 +295,29 @@ if prompt_container:
         
     if user_text or uploaded_files:
         st.session_state.messages.append(message_data)
+        
+        # 📌 สั่งพับเก็บ Sidebar อัตโนมัติจากฝั่ง Python ทันทีเมื่อส่งข้อความ
         st.session_state.sidebar_state = "collapsed"
         st.rerun()
 
-# 10. สคริปต์ JavaScript: บังคับลิงก์ทุกตัวในแชทให้เด้งออกไปเปิดเบราว์เซอร์ภายนอก (ผ่านแอปภายนอก) และเลื่อนแชทลงล่าง
+# 10. สคริปต์ JavaScript: บังคับลิงก์ทุกตัวในแชทให้หลุดออกนอก In-App Browser ของ Facebook ด้วย window.top.open
 if len(st.session_state.messages) > 0:
     components.html(
         """
         <script>
-            function forceExternalBrowserLinks() {
+            function forceExternalBrowserRedirect() {
                 const doc = window.parent.document;
                 
-                // ดักจับลิงก์ทั้งหมดในหน้าแชท แล้วบังคับเปิดแท็บใหม่แบบเบราว์เซอร์ภายนอก
+                // ดักจับลิงก์ทั้งหมดในหน้าแชท แล้วบังคับเปิดออกนอกแอปผ่าน window.top
                 const links = doc.querySelectorAll('.stMarkdown a, [data-testid="stChatMessage"] a');
                 links.forEach(link => {
                     link.setAttribute('target', '_blank');
                     link.setAttribute('rel', 'external noopener noreferrer');
                     
-                    // ป้องกัน event เดิมแล้วสั่งเปิดผ่าน window.open ออกเบราว์เซอร์นอกทันที
+                    // ป้องกัน event ปกติ แล้วสั่งเปิดข้ามเฟรมในระดับบนสุดเพื่อให้ Facebook เด้งถามออกเบราว์เซอร์
                     link.onclick = function(e) {
                         e.preventDefault();
-                        window.parent.open(this.href, '_system');
+                        window.top.open(this.href, '_blank');
                     };
                 });
             }
@@ -336,7 +338,7 @@ if len(st.session_state.messages) > 0:
                 }
             }
 
-            forceExternalBrowserLinks();
+            forceExternalBrowserRedirect();
             forceScrollToBottom();
             setTimeout(forceScrollToBottom, 50);
             setTimeout(forceScrollToBottom, 150);
