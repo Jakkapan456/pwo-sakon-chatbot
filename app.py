@@ -43,16 +43,6 @@ def set_sidebar_background(image_file):
             border-radius: 16px !important; 
             box-shadow: 0 4px 20px rgba(255, 215, 0, 0.5) !important; 
             transition: all 0.3s ease !important; 
-            transform: none !important;
-        }}
-
-        [data-testid="stSidebar"] [data-testid="stExpander"]:hover, 
-        [data-testid="stSidebar"] button:hover,
-        [data-testid="stSidebar"] .stButton > button:hover {{
-            background: linear-gradient(135deg, #FFFFE0 0%, #FFC107 50%, #FF8C00 100%) !important; 
-            border-color: #FF4500 !important; 
-            box-shadow: 0 8px 30px rgba(255, 165, 0, 0.8) !important; 
-            transform: none !important;
         }}
 
         [data-testid="stSidebar"] [data-testid="stExpander"] summary p,
@@ -77,12 +67,11 @@ if os.path.exists(lotus_img_path):
     with open(lotus_img_path, "rb") as f:
         lotus_base64 = base64.b64encode(f.read()).decode()
 
-# 3. ปรับแต่ง CSS หลัก (ท่าไม้ตายลบปุ่มโฆษณา Streamlit)
+# 3. ปรับแต่ง CSS หลักแบบปลอดภัย (ไม่ไปยุ่งกับ Header ของระบบ)
 st.markdown(f"""
     <style>
     html, body {{
         scroll-behavior: smooth;
-        height: 100%;
     }}
     .stApp {{ 
         background-image: linear-gradient(rgba(255, 240, 245, 0.85), rgba(255, 240, 245, 0.85)), url("data:image/jpeg;base64,{lotus_base64}") !important;
@@ -94,51 +83,16 @@ st.markdown(f"""
 
     .block-container {{
         max-width: 100% !important;
-        width: 100% !important;
-        padding-top: 4rem !important; 
-        padding-bottom: 12rem !important; 
-        padding-left: 5rem !important;
-        padding-right: 5rem !important;
+        padding-top: 3rem !important; 
+        padding-bottom: 8rem !important; 
     }}
 
-    /* รักษาปุ่มเมนูมุมซ้ายบนไว้ */
-    header[data-testid="stHeader"] {{ background: transparent !important; }}
-    
-    /* 🚨 ล้างบางปุ่มขยะและโฆษณาแบบครอบจักรวาล 🚨 */
-    [data-testid="stToolbar"], 
-    [data-testid="stDecoration"], 
-    [data-testid="stStatusWidget"],
-    #MainMenu, footer {{ display: none !important; visibility: hidden !important; }}
-    
-    /* สกัดคลาสและปุ่ม Deploy ทุกชื่อที่เป็นไปได้ */
-    .stAppDeployButton, [data-testid="stAppDeployButton"] {{ display: none !important; opacity: 0 !important; }}
-    *[class*="viewerBadge"] {{ display: none !important; opacity: 0 !important; pointer-events: none !important; }}
-    
-    /* ปุ่มเมนูหน้าต่างซ้ายบน */
-    [data-testid="collapsedControl"] {{
-        display: flex !important;
-        visibility: visible !important;
-        position: fixed !important;
-        top: 15px !important;
-        left: 15px !important;
-        z-index: 999999 !important;
-        background-color: #ffffff !important;
-        border: 2px solid #FF80AB !important;
-        border-radius: 50% !important;
-        width: 45px !important;
-        height: 45px !important;
-        box-shadow: 0 4px 12px rgba(233, 30, 99, 0.3) !important;
-        justify-content: center !important;
-        align-items: center !important;
-    }}
-    
-    [data-testid="collapsedControl"] svg {{
-        fill: #E91E63 !important;
-        width: 24px !important;
-        height: 24px !important;
-    }}
+    /* ซ่อนเฉพาะเมนูหลักและเครดิตด้านล่างอย่างปลอดภัย */
+    #MainMenu {{ visibility: hidden; }}
+    footer {{ visibility: hidden; }}
+    .stDeployButton {{ display: none !important; }}
 
-    /* จัดรูปแบบกล่องข้อความ */
+    /* จัดรูปแบบกล่องแชท */
     [data-testid="stChatMessage"] {{
         padding: 12px 16px !important;
         font-size: 15px !important;
@@ -153,6 +107,7 @@ st.markdown(f"""
         box-shadow: none !important;
     }}
 
+    /* แชทผู้ใช้ (User) */
     [data-testid="stChatMessage"]:has(div[aria-label="Chat message from user"]) {{
         background-color: #FFE4E1 !important;
         margin-left: auto !important;
@@ -163,6 +118,7 @@ st.markdown(f"""
         border: 1px solid #FFB6C1 !important;
     }}
 
+    /* แชทผู้ช่วย AI */
     [data-testid="stChatMessage"]:has(div[aria-label="Chat message from assistant"]) {{
         background-color: #FFFFFF !important;
         margin-left: 0 !important;
@@ -172,34 +128,13 @@ st.markdown(f"""
         border-bottom-left-radius: 4px !important;
         border: 1px solid #FFD1DC !important;
     }}
-
-    /* 📱 ปรับแต่งสำหรับหน้าจอมือถือโดยเฉพาะ */
+    
+    /* 📱 ปรับแต่งสำหรับหน้าจอมือถือ */
     @media (max-width: 768px) {{
-        [data-testid="stSidebar"] {{
-            min-width: 0px !important;
-            max-width: 0px !important;
-            width: 0px !important;
-            overflow: hidden !important;
-        }}
         .block-container {{
-            padding-left: 0.8rem !important;
-            padding-right: 0.8rem !important;
-            padding-bottom: 14rem !important;
-        }}
-        
-        /* 🚨 ดันกล่องแชททับปุ่มทุกสิ่งด้วยเลเยอร์ 2147483647 (ค่าสูงสุดของคอมพิวเตอร์) 🚨 */
-        [data-testid="stChatInput"] {{
-            position: fixed !important;
-            bottom: 0px !important;
-            left: 0px !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            padding: 12px 16px 20px 16px !important;
-            margin: 0 !important;
-            z-index: 2147483647 !important; 
-            background-color: #ffffff !important; 
-            box-shadow: 0 -5px 25px rgba(0,0,0,0.15) !important;
-            border-radius: 20px 20px 0 0 !important; 
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+            padding-bottom: 8rem !important;
         }}
     }}
     </style>
@@ -314,46 +249,29 @@ if prompt_container:
         st.session_state.messages.append(message_data)
         st.rerun()
 
-# 11. สคริปต์ JavaScript สุดโหด: ค้นหาทุกลิงก์ที่เกี่ยวกับ Streamlit แล้วลบตีดักหน้า
+# 11. สคริปต์ JavaScript เฉพาะสำหรับเลื่อนแชทและพับเมนูอย่างปลอดภัย
 if len(st.session_state.messages) > 0:
     components.html(
         """
         <script>
-            function terminateAdButtons() {
+            function autoScrollAndCloseMenu() {
                 try {
                     const doc = window.parent.document;
                     
-                    // 1. ดักจับและลบผ่านลิงก์ href (ไม่ว่าคลาสจะชื่ออะไร ถ้าลิงก์ไป Streamlit ลบทิ้งหมด!)
-                    const links = doc.querySelectorAll('a');
-                    links.forEach(link => {
-                        if (link.href && link.href.includes('streamlit.io/cloud')) {
-                            link.style.setProperty('display', 'none', 'important');
-                            if (link.parentElement) link.parentElement.style.setProperty('display', 'none', 'important');
-                        }
-                    });
-
-                    // 2. ดักลบผ่านชื่อคลาสต่างๆ ที่พบได้บ่อย
-                    const badges = doc.querySelectorAll('[class*="viewerBadge"], [data-testid="stAppDeployButton"], .stAppDeployButton');
-                    badges.forEach(badge => {
-                        badge.style.setProperty('display', 'none', 'important');
-                    });
-
-                    // 3. ฟังก์ชันพับหน้าต่างและเลื่อนแชท
+                    // สั่งพับ Sidebar เมื่อมีข้อความใหม่
                     const mainArea = doc.querySelector('section.main');
                     if (mainArea) {
                         mainArea.click();
-                        mainArea.scrollTo({ top: mainArea.scrollHeight, behavior: 'smooth' });
                     }
+                    
+                    // เลื่อนแชทลงล่างสุด
                     const chatMessages = doc.querySelectorAll('[data-testid="stChatMessage"]');
                     if (chatMessages.length > 0) {
                         chatMessages[chatMessages.length - 1].scrollIntoView({ behavior: 'smooth', block: 'end' });
                     }
                 } catch(e) {}
             }
-
-            // รันสคริปต์กวาดล้างทุกๆ 0.5 วินาที เพื่อดักมันทุกครั้งที่เว็บพยายามโหลดขึ้นมา
-            terminateAdButtons();
-            setInterval(terminateAdButtons, 500);
+            setTimeout(autoScrollAndCloseMenu, 300);
         </script>
         """,
         height=0,
