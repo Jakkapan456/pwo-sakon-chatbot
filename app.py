@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
-# 📌 ฟังก์ชันตั้งค่า Sidebar แบบสตริงธรรมดา (ตัด f ออก ป้องกัน Error 100%)
+# 📌 ฟังก์ชันตั้งค่า Sidebar
 def set_sidebar_background(image_file):
     try:
         encoded_string = ""
@@ -23,9 +23,10 @@ def set_sidebar_background(image_file):
             with open(image_file, "rb") as f:
                 encoded_string = base64.b64encode(f.read()).decode()
         
-        css = """
+        css = f"""
         <style>
-        [data-testid="stSidebar"] {
+        [data-testid="stSidebar"] {{
+            background-image: linear-gradient(rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.82)), url("data:image/jpeg;base64,{encoded_string}");
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -33,36 +34,36 @@ def set_sidebar_background(image_file):
         
         [data-testid="stSidebar"] [data-testid="stExpander"], 
         [data-testid="stSidebar"] button,
-        [data-testid="stSidebar"] .stButton > button {
+        [data-testid="stSidebar"] .stButton > button {{
             background: linear-gradient(135deg, #FFF8DC 0%, #FFD700 50%, #DAA520 100%) !important; 
             border: 2px solid #FF8C00 !important; 
             border-radius: 16px !important; 
             box-shadow: 0 4px 20px rgba(255, 215, 0, 0.5) !important; 
             transition: all 0.3s ease !important; 
             transform: none !important;
-        }
+        }}
 
         [data-testid="stSidebar"] [data-testid="stExpander"]:hover, 
         [data-testid="stSidebar"] button:hover,
-        [data-testid="stSidebar"] .stButton > button:hover {
+        [data-testid="stSidebar"] .stButton > button:hover {{
             background: linear-gradient(135deg, #FFFFE0 0%, #FFC107 50%, #FF8C00 100%) !important; 
             border-color: #FF4500 !important; 
             box-shadow: 0 8px 30px rgba(255, 165, 0, 0.8) !important; 
             transform: none !important;
-        }
+        }}
 
         [data-testid="stSidebar"] [data-testid="stExpander"] summary p,
         [data-testid="stSidebar"] .stMarkdown p,
-        [data-testid="stSidebar"] button p {
+        [data-testid="stSidebar"] button p {{
             color: #4A3B00 !important; 
             font-weight: bold !important;
             text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
-        }
+        }}
         
-        .streamlit-expanderHeader {
+        .streamlit-expanderHeader {{
             color: #4A3B00 !important;
             font-weight: bold !important;
-        }
+        }}
         </style>
         """
         st.markdown(css, unsafe_allow_html=True)
@@ -72,40 +73,42 @@ def set_sidebar_background(image_file):
 # 📌 เรียกใช้งานฟังก์ชันตั้งค่า Sidebar
 set_sidebar_background("sidebar_bg.jpg") 
 
-# 2. แปลงรูปภาพ bg_lotus.jpg ให้เป็น Base64 อัตโนมัติสำหรับทำพื้นหลังตรงกลาง
+# 2. แปลงรูปภาพ bg_lotus.jpg ให้กลับมาแสดงผลเป็นพื้นหลังตรงกลางเหมือนเดิม
 lotus_img_path = "bg_lotus.jpg"
 lotus_base64 = ""
 if os.path.exists(lotus_img_path):
     with open(lotus_img_path, "rb") as f:
         lotus_base64 = base64.b64encode(f.read()).decode()
 
-# 3. ปรับแต่ง CSS หลักของหน้าเว็บ
-st.markdown("""
+# 3. ปรับแต่ง CSS หลักของหน้าเว็บ (ใส่พื้นหลังภาพบัวกลับมาแล้ว)
+st.markdown(f"""
     <style>
-    html, body {
+    html, body {{
         scroll-behavior: smooth;
         height: 100%;
-    }
-    .stApp { 
+    }}
+    .stApp {{ 
+        background-image: linear-gradient(rgba(255, 240, 245, 0.85), rgba(255, 240, 245, 0.85)), url("data:image/jpeg;base64,{lotus_base64}") !important;
         background-size: cover !important;
         background-position: center !important;
         background-repeat: no-repeat !important;
         background-attachment: fixed !important;
-    }
+    }}
     
     button:hover, 
     .stButton > button:hover, 
-    div[data-testid="stExpander"]:hover {
+    div[data-testid="stExpander"]:hover {{
         transform: none !important;
-    }
+    }}
 
-    .block-container {
+    .block-container {{
         max-width: 100% !important;
         width: 100% !important;
         min-height: 100vh !important;
         padding-top: 12rem !important; 
         padding-bottom: 8rem !important; 
         margin: 0 !important;
+        background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url("data:image/jpeg;base64,{lotus_base64}") !important;
         background-size: cover !important;
         background-position: center !important;
         background-repeat: no-repeat !important;
@@ -113,9 +116,9 @@ st.markdown("""
         box-shadow: none !important;
         padding-left: 5rem !important;
         padding-right: 5rem !important;
-    }
+    }}
 
-    [data-testid="collapsedControl"] {
+    [data-testid="collapsedControl"] {{
         display: flex !important;
         visibility: visible !important;
         position: fixed !important;
@@ -130,30 +133,30 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(233, 30, 99, 0.3) !important;
         justify-content: center !important;
         align-items: center !important;
-    }
+    }}
     
-    [data-testid="collapsedControl"] svg {
+    [data-testid="collapsedControl"] svg {{
         fill: #E91E63 !important;
         width: 24px !important;
         height: 24px !important;
-    }
+    }}
 
-    #MainMenu, footer {
+    #MainMenu, footer {{
         display: none !important;
-    }
+    }}
 
-    @media (max-width: 768px) {
-        [data-testid="stSidebar"] {
+    @media (max-width: 768px) {{
+        [data-testid="stSidebar"] {{
             width: 100% !important;
             max-width: 100% !important;
             min-width: 100% !important;
-        }
-        .block-container {
+        }}
+        .block-container {{
             padding-left: 1rem !important;
             padding-right: 1rem !important;
             padding-top: 6rem !important;
-        }
-    }
+        }}
+    }}
     </style>
 """, unsafe_allow_html=True)
 
