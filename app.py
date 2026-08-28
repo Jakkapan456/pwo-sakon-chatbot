@@ -62,11 +62,6 @@ def set_sidebar_background(image_file):
             font-weight: bold !important;
             text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
         }}
-        
-        .streamlit-expanderHeader {{
-            color: #4A3B00 !important;
-            font-weight: bold !important;
-        }}
         </style>
         """
         st.markdown(css, unsafe_allow_html=True)
@@ -82,7 +77,7 @@ if os.path.exists(lotus_img_path):
     with open(lotus_img_path, "rb") as f:
         lotus_base64 = base64.b64encode(f.read()).decode()
 
-# 3. ปรับแต่ง CSS หลัก (ซ่อนไอคอนมุมขวาล่าง ซ่อน Sidebar สนิทบนมือถือ เคลียร์ขอบแชท)
+# 3. ปรับแต่ง CSS หลัก (ใช้ CSS ลบเฉพาะปุ่ม Manage App อย่างปลอดภัย)
 st.markdown(f"""
     <style>
     html, body {{
@@ -96,29 +91,26 @@ st.markdown(f"""
         background-repeat: no-repeat !important;
         background-attachment: fixed !important;
     }}
-    
-    button:hover, 
-    .stButton > button:hover, 
-    div[data-testid="stExpander"]:hover {{
-        transform: none !important;
-    }}
 
     .block-container {{
         max-width: 100% !important;
         width: 100% !important;
         min-height: 100vh !important;
         padding-top: 10rem !important; 
-        padding-bottom: 16rem !important; 
+        padding-bottom: 12rem !important; 
         margin: 0 !important;
-        background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url("data:image/jpeg;base64,{lotus_base64}") !important;
-        background-size: cover !important;
-        background-position: center !important;
-        background-repeat: no-repeat !important;
-        border-radius: 0px !important;
-        box-shadow: none !important;
         padding-left: 5rem !important;
         padding-right: 5rem !important;
     }}
+
+    /* 📌 จุดกำจัดปุ่มกวนใจ มุมขวาล่าง แบบปลอดภัย 100% */
+    #MainMenu {{ visibility: hidden !important; }}
+    footer {{ visibility: hidden !important; }}
+    .stDeployButton {{ display: none !important; }}
+    div[class^="viewerBadge"] {{ display: none !important; }}
+    .viewerBadge_container {{ display: none !important; }}
+    .viewerBadge_link {{ display: none !important; }}
+    [data-testid="stToolbar"] {{ display: none !important; }}
 
     [data-testid="collapsedControl"] {{
         display: flex !important;
@@ -143,20 +135,7 @@ st.markdown(f"""
         height: 24px !important;
     }}
 
-    #MainMenu, footer {{
-        display: none !important;
-    }}
-
-    /* 📌 ซ่อนปุ่ม Deploy, ปุ่ม Manage App (สีแดง/ม่วงมุมขวาล่าง) และแบนเนอร์กวนใจ */
-    .stDeployButton, 
-    [data-testid="stToolbar"],
-    [class^="viewerBadge"],
-    [data-testid="stAppViewContainer"] > div:last-child {{
-        display: none !important;
-        visibility: hidden !important;
-    }}
-
-    /* 📌 เคลียร์เส้นขอบแชท */
+    /* จัดรูปแบบกล่องแชทไร้เส้นขอบ */
     [data-testid="stChatMessage"] {{
         padding: 12px 16px !important;
         font-size: 15px !important;
@@ -171,7 +150,7 @@ st.markdown(f"""
         box-shadow: none !important;
     }}
 
-    /* แชทผู้ใช้ (User) ชิดขวา สีชมพูพาสเทล */
+    /* แชทผู้ใช้ (User) ชิดขวา */
     [data-testid="stChatMessage"]:has(div[aria-label="Chat message from user"]) {{
         background-color: #FFE4E1 !important;
         margin-left: auto !important;
@@ -182,7 +161,7 @@ st.markdown(f"""
         border: 1px solid #FFB6C1 !important;
     }}
 
-    /* แชทผู้ช่วย AI ชิดซ้าย สีขาวสะอาด */
+    /* แชทผู้ช่วย AI ชิดซ้าย */
     [data-testid="stChatMessage"]:has(div[aria-label="Chat message from assistant"]) {{
         background-color: #FFFFFF !important;
         margin-left: 0 !important;
@@ -193,7 +172,7 @@ st.markdown(f"""
         border: 1px solid #FFD1DC !important;
     }}
 
-    /* 📱 ปรับแต่งสำหรับหน้าจอมือถือ */
+    /* 📱 ปรับแต่งสำหรับหน้าจอมือถือโดยเฉพาะ */
     @media (max-width: 768px) {{
         [data-testid="stSidebar"] {{
             min-width: 0px !important;
@@ -205,7 +184,7 @@ st.markdown(f"""
             padding-left: 0.8rem !important;
             padding-right: 0.8rem !important;
             padding-top: 5rem !important;
-            padding-bottom: 18rem !important;
+            padding-bottom: 14rem !important;
         }}
         
         [data-testid="stChatInput"] {{
@@ -234,7 +213,7 @@ render_sidebar()
 if len(st.session_state.messages) == 0:
     render_header()
 
-# 7. ฟังก์ชันสร้าง QR Code และปุ่มลิงก์ภายนอก
+# 7. ฟังก์ชันสร้าง QR Code
 def generate_qrcode_image(url):
     qr = qrcode.QRCode(version=1, box_size=10, border=2)
     qr.add_data(url)
@@ -330,10 +309,9 @@ if prompt_container:
         
     if user_text or uploaded_files:
         st.session_state.messages.append(message_data)
-        st.session_state.sidebar_state = "collapsed"
         st.rerun()
 
-# 11. สคริปต์ JavaScript: สั่งพับ Sidebar อัตโนมัติ + เลื่อนแชทลงล่าง
+# 11. สคริปต์ JavaScript: บังคับพับ Sidebar และเลื่อนแชทลงสุด (ทำงานได้อย่างปลอดภัย)
 if len(st.session_state.messages) > 0:
     components.html(
         """
@@ -341,6 +319,7 @@ if len(st.session_state.messages) > 0:
             function autoCloseSidebarAndScroll() {
                 const doc = window.parent.document;
                 
+                // 1. สั่งพับ Sidebar เมื่อพิมพ์ข้อความ
                 const mainArea = doc.querySelector('section.main');
                 if (mainArea) {
                     mainArea.click();
@@ -349,7 +328,8 @@ if len(st.session_state.messages) > 0:
                         behavior: 'smooth'
                     });
                 }
-
+                
+                // 2. เลื่อนแชทล่าสุดให้เห็นชัดๆ
                 const chatMessages = doc.querySelectorAll('[data-testid="stChatMessage"]');
                 if (chatMessages.length > 0) {
                     const lastMessage = chatMessages[chatMessages.length - 1];
