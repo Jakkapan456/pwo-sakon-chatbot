@@ -77,7 +77,7 @@ if os.path.exists(lotus_img_path):
     with open(lotus_img_path, "rb") as f:
         lotus_base64 = base64.b64encode(f.read()).decode()
 
-# 3. ปรับแต่ง CSS หลัก (ใช้ CSS ลบเฉพาะปุ่ม Manage App อย่างปลอดภัย)
+# 3. ปรับแต่ง CSS หลัก (คืนชีพปุ่มเปิดเมนู และซ่อนของกวนใจแบบปลอดภัย)
 st.markdown(f"""
     <style>
     html, body {{
@@ -95,23 +95,18 @@ st.markdown(f"""
     .block-container {{
         max-width: 100% !important;
         width: 100% !important;
-        min-height: 100vh !important;
-        padding-top: 10rem !important; 
+        padding-top: 5rem !important; 
         padding-bottom: 12rem !important; 
-        margin: 0 !important;
         padding-left: 5rem !important;
         padding-right: 5rem !important;
     }}
 
-    /* 📌 จุดกำจัดปุ่มกวนใจ มุมขวาล่าง แบบปลอดภัย 100% */
+    /* 📌 ซ่อนขยะเบื้องต้น (แต่ไม่ซ่อน header เพราะเดี๋ยวปุ่มเมนูหาย) */
     #MainMenu {{ visibility: hidden !important; }}
     footer {{ visibility: hidden !important; }}
-    .stDeployButton {{ display: none !important; }}
-    div[class^="viewerBadge"] {{ display: none !important; }}
-    .viewerBadge_container {{ display: none !important; }}
-    .viewerBadge_link {{ display: none !important; }}
-    [data-testid="stToolbar"] {{ display: none !important; }}
+    .stDeployButton, [data-testid="manage-app-button"], div[class^="viewerBadge"] {{ display: none !important; opacity: 0 !important; }}
 
+    /* 📌 คืนชีพปุ่มเปิด Sidebar (ปุ่ม 3 ขีด มุมซ้ายบน) ให้สวยงาม */
     [data-testid="collapsedControl"] {{
         display: flex !important;
         visibility: visible !important;
@@ -135,7 +130,7 @@ st.markdown(f"""
         height: 24px !important;
     }}
 
-    /* จัดรูปแบบกล่องแชทไร้เส้นขอบ */
+    /* จัดรูปแบบกล่องแชท */
     [data-testid="stChatMessage"] {{
         padding: 12px 16px !important;
         font-size: 15px !important;
@@ -174,16 +169,9 @@ st.markdown(f"""
 
     /* 📱 ปรับแต่งสำหรับหน้าจอมือถือโดยเฉพาะ */
     @media (max-width: 768px) {{
-        [data-testid="stSidebar"] {{
-            min-width: 0px !important;
-            max-width: 0px !important;
-            width: 0px !important;
-            overflow: hidden !important;
-        }}
         .block-container {{
             padding-left: 0.8rem !important;
             padding-right: 0.8rem !important;
-            padding-top: 5rem !important;
             padding-bottom: 14rem !important;
         }}
         
@@ -311,37 +299,45 @@ if prompt_container:
         st.session_state.messages.append(message_data)
         st.rerun()
 
-# 11. สคริปต์ JavaScript: บังคับพับ Sidebar และเลื่อนแชทลงสุด (ทำงานได้อย่างปลอดภัย)
-if len(st.session_state.messages) > 0:
-    components.html(
-        """
-        <script>
-            function autoCloseSidebarAndScroll() {
-                const doc = window.parent.document;
-                
-                // 1. สั่งพับ Sidebar เมื่อพิมพ์ข้อความ
-                const mainArea = doc.querySelector('section.main');
-                if (mainArea) {
-                    mainArea.click();
-                    mainArea.scrollTo({
-                        top: mainArea.scrollHeight,
-                        behavior: 'smooth'
-                    });
-                }
-                
-                // 2. เลื่อนแชทล่าสุดให้เห็นชัดๆ
-                const chatMessages = doc.querySelectorAll('[data-testid="stChatMessage"]');
-                if (chatMessages.length > 0) {
-                    const lastMessage = chatMessages[chatMessages.length - 1];
-                    lastMessage.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                }
-            }
+# 11. สคริปต์ JavaScript: เพชฌฆาตกำจัด 2 ปุ่มล่างขวาอย่างต่อเนื่อง และจัดการเลื่อนแชท
+components.html(
+    """
+    <script>
+        const doc = window.parent.document;
+        
+        // 1. ฟังก์ชันเพชฌฆาต: สแกนหาและลบปุ่มสีแดง (Deploy) และปุ่มสีม่วง (Manage App) ให้หายสาบสูญ
+        function killAnnoyingButtons() {
+            const badButtons = doc.querySelectorAll('.stDeployButton, [data-testid="manage-app-button"], [class*="viewerBadge"]');
+            badButtons.forEach(btn => {
+                btn.style.setProperty('display', 'none', 'important');
+                btn.style.setProperty('opacity', '0', 'important');
+                btn.style.setProperty('pointer-events', 'none', 'important');
+            });
+        }
+        
+        // ให้สคริปต์ทำงานทุกๆ 0.5 วินาที เพื่อดักลบปุ่มทันทีที่มันแอบโหลดขึ้นมาทีหลัง
+        setInterval(killAnnoyingButtons, 500);
 
-            autoCloseSidebarAndScroll();
-            setTimeout(autoCloseSidebarAndScroll, 50);
-            setTimeout(autoCloseSidebarAndScroll, 150);
-        </script>
-        """,
-        height=0,
-        width=0,
-    )
+        // 2. ฟังก์ชันช่วยพับหน้าต่างและเลื่อนแชทลงเวลาคุย
+        function autoCloseAndScroll() {
+            const mainArea = doc.querySelector('section.main');
+            if (mainArea) {
+                mainArea.click();
+                mainArea.scrollTo({
+                    top: mainArea.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }
+            const chatMessages = doc.querySelectorAll('[data-testid="stChatMessage"]');
+            if (chatMessages.length > 0) {
+                const lastMessage = chatMessages[chatMessages.length - 1];
+                lastMessage.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }
+        }
+        setTimeout(autoCloseAndScroll, 200);
+        setTimeout(autoCloseAndScroll, 600);
+    </script>
+    """,
+    height=0,
+    width=0,
+)
