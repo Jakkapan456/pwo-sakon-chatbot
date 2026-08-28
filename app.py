@@ -77,7 +77,7 @@ if os.path.exists(lotus_img_path):
     with open(lotus_img_path, "rb") as f:
         lotus_base64 = base64.b64encode(f.read()).decode()
 
-# 3. ปรับแต่ง CSS หลัก (ท่าไม้ตายลบปุ่ม + ดันกล่องแชททับ)
+# 3. ปรับแต่ง CSS หลัก (ท่าไม้ตายลบปุ่มโฆษณา Streamlit)
 st.markdown(f"""
     <style>
     html, body {{
@@ -101,24 +101,44 @@ st.markdown(f"""
         padding-right: 5rem !important;
     }}
 
-    /* 📌 รักษาปุ่มเมนูมุมซ้ายบนไว้ แต่ซ่อนแถบเครื่องมือมุมขวาบน (Fork/GitHub) */
-    header[data-testid="stHeader"] {{
-        background: transparent !important;
-    }}
-    [data-testid="stToolbar"] {{
-        display: none !important;
-    }}
-
-    /* 🚨 ท่าไม้ตาย 1: ใช้ CSS กวาดล้างปุ่มแดง/ม่วงทุกชื่อคลาสที่เป็นไปได้ 🚨 */
+    /* รักษาปุ่มเมนูมุมซ้ายบนไว้ */
+    header[data-testid="stHeader"] {{ background: transparent !important; }}
+    
+    /* 🚨 ล้างบางปุ่มขยะและโฆษณาแบบครอบจักรวาล 🚨 */
+    [data-testid="stToolbar"], 
+    [data-testid="stDecoration"], 
+    [data-testid="stStatusWidget"],
     #MainMenu, footer {{ display: none !important; visibility: hidden !important; }}
-    .stDeployButton {{ display: none !important; opacity: 0 !important; pointer-events: none !important; }}
-    #manage-app-button {{ display: none !important; opacity: 0 !important; pointer-events: none !important; }}
-    [data-testid="manage-app-button"] {{ display: none !important; opacity: 0 !important; pointer-events: none !important; }}
-    div[class*="viewerBadge"] {{ display: none !important; opacity: 0 !important; pointer-events: none !important; }}
-    div[class*="styles_viewerBadge"] {{ display: none !important; opacity: 0 !important; pointer-events: none !important; }}
-    iframe[title*="Streamlit"] {{ display: none !important; opacity: 0 !important; pointer-events: none !important; }}
+    
+    /* สกัดคลาสและปุ่ม Deploy ทุกชื่อที่เป็นไปได้ */
+    .stAppDeployButton, [data-testid="stAppDeployButton"] {{ display: none !important; opacity: 0 !important; }}
+    *[class*="viewerBadge"] {{ display: none !important; opacity: 0 !important; pointer-events: none !important; }}
+    
+    /* ปุ่มเมนูหน้าต่างซ้ายบน */
+    [data-testid="collapsedControl"] {{
+        display: flex !important;
+        visibility: visible !important;
+        position: fixed !important;
+        top: 15px !important;
+        left: 15px !important;
+        z-index: 999999 !important;
+        background-color: #ffffff !important;
+        border: 2px solid #FF80AB !important;
+        border-radius: 50% !important;
+        width: 45px !important;
+        height: 45px !important;
+        box-shadow: 0 4px 12px rgba(233, 30, 99, 0.3) !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }}
+    
+    [data-testid="collapsedControl"] svg {{
+        fill: #E91E63 !important;
+        width: 24px !important;
+        height: 24px !important;
+    }}
 
-    /* จัดรูปแบบกล่องแชทไร้เส้นขอบ */
+    /* จัดรูปแบบกล่องข้อความ */
     [data-testid="stChatMessage"] {{
         padding: 12px 16px !important;
         font-size: 15px !important;
@@ -133,7 +153,6 @@ st.markdown(f"""
         box-shadow: none !important;
     }}
 
-    /* แชทผู้ใช้ (User) ชิดขวา */
     [data-testid="stChatMessage"]:has(div[aria-label="Chat message from user"]) {{
         background-color: #FFE4E1 !important;
         margin-left: auto !important;
@@ -144,7 +163,6 @@ st.markdown(f"""
         border: 1px solid #FFB6C1 !important;
     }}
 
-    /* แชทผู้ช่วย AI ชิดซ้าย */
     [data-testid="stChatMessage"]:has(div[aria-label="Chat message from assistant"]) {{
         background-color: #FFFFFF !important;
         margin-left: 0 !important;
@@ -169,17 +187,19 @@ st.markdown(f"""
             padding-bottom: 14rem !important;
         }}
         
-        /* 🚨 ท่าไม้ตาย 2: ดันกล่องแชทให้อยู่ "เลเยอร์บนสุด" (z-index 99999999) เหยียบปุ่มมิด! */
+        /* 🚨 ดันกล่องแชททับปุ่มทุกสิ่งด้วยเลเยอร์ 2147483647 (ค่าสูงสุดของคอมพิวเตอร์) 🚨 */
         [data-testid="stChatInput"] {{
             position: fixed !important;
-            bottom: 15px !important;
-            left: 50% !important;
-            transform: translateX(-50%) !important;
-            width: 96% !important;
-            z-index: 99999999 !important; 
-            background: rgba(255, 255, 255, 1) !important; /* พื้นหลังทึบ 100% บังปุ่มสนิท */
-            box-shadow: 0 -4px 15px rgba(0,0,0,0.15) !important;
-            border-radius: 12px !important;
+            bottom: 0px !important;
+            left: 0px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 12px 16px 20px 16px !important;
+            margin: 0 !important;
+            z-index: 2147483647 !important; 
+            background-color: #ffffff !important; 
+            box-shadow: 0 -5px 25px rgba(0,0,0,0.15) !important;
+            border-radius: 20px 20px 0 0 !important; 
         }}
     }}
     </style>
@@ -294,23 +314,31 @@ if prompt_container:
         st.session_state.messages.append(message_data)
         st.rerun()
 
-# 11. สคริปต์ JavaScript แบบมีเกราะป้องกัน: เลื่อนแชท + แอบลบปุ่ม (ไม่พังแม้โดนบล็อก)
+# 11. สคริปต์ JavaScript สุดโหด: ค้นหาทุกลิงก์ที่เกี่ยวกับ Streamlit แล้วลบตีดักหน้า
 if len(st.session_state.messages) > 0:
     components.html(
         """
         <script>
-            function safeManageUI() {
+            function terminateAdButtons() {
                 try {
                     const doc = window.parent.document;
                     
-                    // สแกนลบปุ่มกวนใจ
-                    const badBadges = doc.querySelectorAll('.stDeployButton, [id*="manage-app"], [class*="viewerBadge"]');
-                    badBadges.forEach(btn => {
-                        btn.style.setProperty('display', 'none', 'important');
-                        btn.style.setProperty('opacity', '0', 'important');
+                    // 1. ดักจับและลบผ่านลิงก์ href (ไม่ว่าคลาสจะชื่ออะไร ถ้าลิงก์ไป Streamlit ลบทิ้งหมด!)
+                    const links = doc.querySelectorAll('a');
+                    links.forEach(link => {
+                        if (link.href && link.href.includes('streamlit.io/cloud')) {
+                            link.style.setProperty('display', 'none', 'important');
+                            if (link.parentElement) link.parentElement.style.setProperty('display', 'none', 'important');
+                        }
                     });
 
-                    // พับ Sidebar และเลื่อนแชทลง
+                    // 2. ดักลบผ่านชื่อคลาสต่างๆ ที่พบได้บ่อย
+                    const badges = doc.querySelectorAll('[class*="viewerBadge"], [data-testid="stAppDeployButton"], .stAppDeployButton');
+                    badges.forEach(badge => {
+                        badge.style.setProperty('display', 'none', 'important');
+                    });
+
+                    // 3. ฟังก์ชันพับหน้าต่างและเลื่อนแชท
                     const mainArea = doc.querySelector('section.main');
                     if (mainArea) {
                         mainArea.click();
@@ -320,15 +348,12 @@ if len(st.session_state.messages) > 0:
                     if (chatMessages.length > 0) {
                         chatMessages[chatMessages.length - 1].scrollIntoView({ behavior: 'smooth', block: 'end' });
                     }
-                } catch(e) {
-                    // หากเซิร์ฟเวอร์บล็อก จะไม่ฟ้อง Error ขาวโพลนอีกต่อไป
-                    console.log("UI Adjusted Safely.");
-                }
+                } catch(e) {}
             }
 
-            safeManageUI();
-            setTimeout(safeManageUI, 500);
-            setInterval(safeManageUI, 2000);
+            // รันสคริปต์กวาดล้างทุกๆ 0.5 วินาที เพื่อดักมันทุกครั้งที่เว็บพยายามโหลดขึ้นมา
+            terminateAdButtons();
+            setInterval(terminateAdButtons, 500);
         </script>
         """,
         height=0,
