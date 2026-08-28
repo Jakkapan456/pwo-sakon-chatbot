@@ -7,7 +7,7 @@ from components import render_header, render_sidebar
 from PIL import Image
 from config import LOGO_URL  
 
-# 1. ตั้งค่าหน้าเว็บ
+# 1. ตั้งค่าหน้าเว็บ (กำหนดค่าเริ่มต้น Sidebar เป็น collapsed ให้พับเก็บตลอดเวลาเมื่อเปิดบนมือถือ)
 st.set_page_config(
     page_title="AI ผู้ช่วยสิทธิสวัสดิการ พมจ.สกลนคร",
     page_icon=LOGO_URL,  
@@ -79,7 +79,7 @@ if os.path.exists(lotus_img_path):
     with open(lotus_img_path, "rb") as f:
         lotus_base64 = base64.b64encode(f.read()).decode()
 
-# 3. ปรับแต่ง CSS หลัก (เพิ่มดีไซน์แยกแชทซ้าย-ขวาอย่างชัดเจน + ล็อคกล่องพิมพ์ข้อความ)
+# 3. ปรับแต่ง CSS หลัก (แก้เส้นประสีขาวในกล่องแชท + จัดแต่งซ้ายขวาให้เนียนกริบ)
 st.markdown(f"""
     <style>
     html, body {{
@@ -144,12 +144,13 @@ st.markdown(f"""
         display: none !important;
     }}
 
-    /* 📌 จัดรูปแบบกล่องแชทแยกซ้าย-ขวา (User ชิดขวา / Assistant ชิดซ้าย) */
+    /* 📌 ลบเส้นประและเส้นขอบแปลกๆ ในกล่องข้อความออกให้หมด */
     .stChatMessage {{
         padding: 10px 14px !important;
         font-size: 15px !important;
         border-radius: 16px !important;
         margin-bottom: 12px !important;
+        border: none !important;
     }}
 
     /* แชทผู้ใช้ (User) ชิดขวา สีชมพูพาสเทล */
@@ -163,7 +164,7 @@ st.markdown(f"""
         border: 1px solid #FFB6C1 !important;
     }}
 
-    /* แชทผู้ช่วย AI ชิดซ้าย สีขาวขอบชมพูอ่อน */
+    /* แชทผู้ช่วย AI ชิดซ้าย สีขาวสะอาด ไม่มีเส้นประมารบกวน */
     [data-testid="stChatMessage"]:has(div[aria-label="Chat message from assistant"]) {{
         background-color: #FFFFFF !important;
         margin-left: 0 !important;
@@ -174,7 +175,7 @@ st.markdown(f"""
         border: 1px solid #FFD1DC !important;
     }}
 
-    /* บังคับลิงก์ให้เปิดแท็บใหม่และกดง่ายขึ้น */
+    /* บังคับลิงก์ให้กดง่ายและเปิดหน้าต่างใหม่ */
     .stMarkdown a {{
         color: #E91E63 !important;
         font-weight: bold !important;
@@ -196,7 +197,6 @@ st.markdown(f"""
             padding-bottom: 14rem !important;
         }}
         
-        /* ล็อคกล่องพิมพ์ข้อความให้อยู่เหนือกระดานพิมพ์ตลอดเวลา */
         [data-testid="stChatInput"] {{
             position: fixed !important;
             bottom: 10px !important;
@@ -299,31 +299,33 @@ if prompt_container:
         st.session_state.messages.append(message_data)
         st.rerun()
 
-# 10. สคริปต์ JavaScript: บังคับลิงก์เปิดหน้าต่างใหม่เต็มจอ (_top สำหรับมือถือ) + ปิด Sidebar และเลื่อนแชทลงล่าง
+# 10. สคริปต์ JavaScript: บังคับลิงก์เปิดเว็บภายนอก (_system / _blank) + สั่งพับเก็บ Sidebar อัตโนมัติทันที
 if len(st.session_state.messages) > 0:
     components.html(
         """
         <script>
-            function processMobileInteractions() {
+            function forceMobileActions() {
                 const doc = window.parent.document;
                 
-                // 1. บังคับลิงก์ทั้งหมดให้ใช้ _top บนมือถือ เพื่อให้ออกนอก In-App Browser (Messenger) ได้
+                // 1. บังคับลิงก์ทุกตัวในแชทให้เปิดออกนอกแอปโดยใช้ window.open
                 const links = doc.querySelectorAll('.stMarkdown a, [data-testid="stChatMessage"] a');
                 links.forEach(link => {
-                    link.setAttribute('target', '_top');
+                    link.setAttribute('target', '_blank');
                     link.setAttribute('rel', 'noopener noreferrer');
+                    link.onclick = function(e) {
+                        e.preventDefault();
+                        window.parent.open(this.href, '_blank');
+                    };
                 });
 
-                // 2. สั่งปิด Sidebar อัตโนมัติเมื่อผู้ใช้พิมพ์หรือกดคำถาม
-                if (window.parent.innerWidth <= 768) {
-                    const closeButtons = doc.querySelectorAll('button');
-                    closeButtons.forEach(btn => {
-                        const label = btn.getAttribute('aria-label') || '';
-                        if (label.toLowerCase().includes('close') || label.toLowerCase().includes('sidebar')) {
-                            btn.click();
-                        }
-                    });
+                // 2. สั่งปิด/พับเก็บ Sidebar อัตโนมัติทันทีเมื่อมีข้อความหรือผู้ใช้เลือกคำถาม
+                const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
+                if (sidebar) {
+                    // จำลองการคลิกปุ่มซ่อนเมนูหรือคลิกพื้นที่ว่างหลักเพื่อให้ Sidebar หุบเข้าทันที
+                    const collapseControl = doc.querySelector('[data-testid="collapsedControl"]');
                     const mainArea = doc.querySelector('section.main');
+                    
+                    // สั่งคลิกพื้นที่หลักเพื่อพับหน้าต่าง Sidebar บนมือถือ
                     if (mainArea) {
                         mainArea.click();
                     }
@@ -346,7 +348,7 @@ if len(st.session_state.messages) > 0:
                 }
             }
 
-            processMobileInteractions();
+            forceMobileActions();
             forceScrollToBottom();
             setTimeout(forceScrollToBottom, 50);
             setTimeout(forceScrollToBottom, 150);
