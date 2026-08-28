@@ -82,7 +82,7 @@ if os.path.exists(lotus_img_path):
     with open(lotus_img_path, "rb") as f:
         lotus_base64 = base64.b64encode(f.read()).decode()
 
-# 3. ปรับแต่ง CSS หลัก (ซ่อน Sidebar สนิทบนมือถือ และเคลียร์ขอบแชท)
+# 3. ปรับแต่ง CSS หลัก (ถอดตัว f ออกแล้ว เพื่อป้องกัน SyntaxError จากปีกกาใน CSS)
 st.markdown(f"""
     <style>
     html, body {{
@@ -185,7 +185,7 @@ st.markdown(f"""
     }}
 
     /* 📱 ปรับแต่งสำหรับหน้าจอมือถือ */
-    @media (max-width: 768px) {
+    @media (max-width: 768px) {{
         .block-container {{
             padding-left: 0.8rem !important;
             padding-right: 0.8rem !important;
@@ -204,7 +204,7 @@ st.markdown(f"""
             box-shadow: 0 -4px 15px rgba(0,0,0,0.15) !important;
             border-radius: 12px !important;
         }}
-    }
+    }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -318,7 +318,7 @@ if prompt_container:
         st.session_state.sidebar_state = "collapsed"
         st.rerun()
 
-# 11. สคริปต์ JavaScript: สั่งจำลองคลิกซ่อน Sidebar อัตโนมัติ + เลื่อนแชทลงล่าง
+# 11. สคริปต์ JavaScript: สั่งพับ Sidebar อัตโนมัติ + เลื่อนแชทลงล่าง
 if len(st.session_state.messages) > 0:
     components.html(
         """
@@ -326,14 +326,9 @@ if len(st.session_state.messages) > 0:
             function autoCloseSidebarAndScroll() {
                 const doc = window.parent.document;
                 
-                // สั่งคลิกพื้นที่หลักเพื่อบังคับพับ Sidebar อัตโนมัติ
                 const mainArea = doc.querySelector('section.main');
                 if (mainArea) {
                     mainArea.click();
-                }
-
-                // เลื่อนหน้าจอแชทลงด้านล่างสุด
-                if (mainArea) {
                     mainArea.scrollTo({
                         top: mainArea.scrollHeight,
                         behavior: 'smooth'
