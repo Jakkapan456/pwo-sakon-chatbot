@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
-# 📌 ฟังก์ชันตั้งค่า Sidebar แบบเคลียร์ f-string ออกทั้งหมด ป้องกัน Error 100%
+# 📌 ฟังก์ชันตั้งค่า Sidebar แบบสตริงธรรมดา (ตัด f ออก ป้องกัน Error 100%)
 def set_sidebar_background(image_file):
     try:
         encoded_string = ""
@@ -23,10 +23,9 @@ def set_sidebar_background(image_file):
             with open(image_file, "rb") as f:
                 encoded_string = base64.b64encode(f.read()).decode()
         
-        css = f"""
+        css = """
         <style>
-        [data-testid="stSidebar"] {{
-            background-image: linear-gradient(rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.82)), url("data:image/jpeg;base64,{encoded_string}");
+        [data-testid="stSidebar"] {
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -34,36 +33,36 @@ def set_sidebar_background(image_file):
         
         [data-testid="stSidebar"] [data-testid="stExpander"], 
         [data-testid="stSidebar"] button,
-        [data-testid="stSidebar"] .stButton > button {{
+        [data-testid="stSidebar"] .stButton > button {
             background: linear-gradient(135deg, #FFF8DC 0%, #FFD700 50%, #DAA520 100%) !important; 
             border: 2px solid #FF8C00 !important; 
             border-radius: 16px !important; 
             box-shadow: 0 4px 20px rgba(255, 215, 0, 0.5) !important; 
             transition: all 0.3s ease !important; 
             transform: none !important;
-        }}
+        }
 
         [data-testid="stSidebar"] [data-testid="stExpander"]:hover, 
         [data-testid="stSidebar"] button:hover,
-        [data-testid="stSidebar"] .stButton > button:hover {{
+        [data-testid="stSidebar"] .stButton > button:hover {
             background: linear-gradient(135deg, #FFFFE0 0%, #FFC107 50%, #FF8C00 100%) !important; 
             border-color: #FF4500 !important; 
             box-shadow: 0 8px 30px rgba(255, 165, 0, 0.8) !important; 
             transform: none !important;
-        }}
+        }
 
         [data-testid="stSidebar"] [data-testid="stExpander"] summary p,
         [data-testid="stSidebar"] .stMarkdown p,
-        [data-testid="stSidebar"] button p {{
+        [data-testid="stSidebar"] button p {
             color: #4A3B00 !important; 
             font-weight: bold !important;
             text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
-        }}
+        }
         
-        .streamlit-expanderHeader {{
+        .streamlit-expanderHeader {
             color: #4A3B00 !important;
             font-weight: bold !important;
-        }}
+        }
         </style>
         """
         st.markdown(css, unsafe_allow_html=True)
