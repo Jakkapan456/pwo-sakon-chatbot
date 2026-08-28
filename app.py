@@ -1,12 +1,13 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import base64
+import os
 from responses import get_ai_response
 from components import render_header, render_sidebar
 from PIL import Image
 from config import LOGO_URL  
 
-# 1. ตั้งค่าหน้าเว็บ (ปรับ initial_sidebar_state เป็น auto เพื่อให้ควบคุมการพับหน้าต่างได้สมูทขึ้นบนมือถือ)
+# 1. ตั้งค่าหน้าเว็บ
 st.set_page_config(
     page_title="AI ผู้ช่วยสิทธิสวัสดิการ พมจ.สกลนคร",
     page_icon=LOGO_URL,  
@@ -14,15 +15,16 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
-# 📌 ฟังก์ชันสำหรับตั้งค่ารูปภาพพื้นหลัง Sidebar พร้อมแต่งกล่องเมนูและ Popover เป็นสีเหลืองทองอร่าม
+# 📌 ฟังก์ชันสำหรับตั้งค่ารูปภาพพื้นหลัง Sidebar
 def set_sidebar_background(image_file):
     try:
-        with open(image_file, "rb") as f:
-            encoded_string = base64.b64encode(f.read()).decode()
+        encoded_string = ""
+        if os.path.exists(image_file):
+            with open(image_file, "rb") as f:
+                encoded_string = base64.b64encode(f.read()).decode()
         
         css = f"""
         <style>
-        /* สร้างเลเยอร์สีขาวโปร่งแสง 82% (0.82) ทับบนรูปภาพ */
         [data-testid="stSidebar"] {{
             background-image: linear-gradient(rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.82)), url("data:image/jpeg;base64,{encoded_string}");
             background-size: cover;
@@ -30,7 +32,6 @@ def set_sidebar_background(image_file):
             background-repeat: no-repeat;
         }
         
-        /* 🌟 ตกแต่งกล่องเมนูและ Expander ใน Sidebar ให้เป็นสีเหลืองทองอร่าม */
         [data-testid="stSidebar"] [data-testid="stExpander"], 
         [data-testid="stSidebar"] button,
         [data-testid="stSidebar"] .stButton > button {{
@@ -39,20 +40,18 @@ def set_sidebar_background(image_file):
             border-radius: 16px !important; 
             box-shadow: 0 4px 20px rgba(255, 215, 0, 0.5) !important; 
             transition: all 0.3s ease !important; 
-            transform: none !important; /* 📌 บังคับห้ามขยับเด็ดขาด */
+            transform: none !important;
         }}
 
-        /* ✨ ลูกเล่นตอนเอาเมาส์ไปชี้เมนู Sidebar (เปลี่ยนแค่สีสว่างขึ้น ไม่มีเอฟเฟกต์เด้ง) */
         [data-testid="stSidebar"] [data-testid="stExpander"]:hover, 
         [data-testid="stSidebar"] button:hover,
         [data-testid="stSidebar"] .stButton > button:hover {{
             background: linear-gradient(135deg, #FFFFE0 0%, #FFC107 50%, #FF8C00 100%) !important; 
             border-color: #FF4500 !important; 
             box-shadow: 0 8px 30px rgba(255, 165, 0, 0.8) !important; 
-            transform: none !important; /* 📌 บังคับห้ามขยับเด็ดขาด */
+            transform: none !important;
         }}
 
-        /* 👑 ปรับตัวหนังสือใน Sidebar ให้คมชัดตัดกับพื้นหลังสีทอง */
         [data-testid="stSidebar"] [data-testid="stExpander"] summary p,
         [data-testid="stSidebar"] .stMarkdown p,
         [data-testid="stSidebar"] button p {{
@@ -65,42 +64,6 @@ def set_sidebar_background(image_file):
             color: #4A3B00 !important;
             font-weight: bold !important;
         }}
-
-        /* 📌 🌟 ตกแต่งกล่อง Popover ตรงกลางให้เป็นสีทองอร่ามแพรวพราว */
-        div[data-testid="stPopoverBody"] {{
-            position: fixed !important; 
-            top: 50% !important;                     
-            left: 320px !important;                  
-            transform: translateY(-50%) !important;  
-            width: 450px !important;    
-            max-height: 80vh !important;             
-            overflow-y: auto !important; 
-            background: linear-gradient(135deg, #FFFDF0 0%, #FFF8DC 100%) !important; 
-            border: 2px solid #DAA520 !important; 
-            border-radius: 16px !important;
-            box-shadow: 0 8px 35px rgba(218, 165, 32, 0.5) !important; 
-            z-index: 999999 !important;
-            padding: 15px !important;
-        }}
-
-        /* 🌟 ปรับแต่งปุ่มและตัวเลือกด้านในกล่อง Popover ให้เป็นสีทองอร่าม */
-        div[data-testid="stPopoverBody"] button {{
-            background: linear-gradient(135deg, #FFF8DC 0%, #FFD700 100%) !important;
-            border: 1.5px solid #DAA520 !important;
-            border-radius: 12px !important;
-            color: #4A3B00 !important;
-            font-weight: bold !important;
-            transition: all 0.3s ease !important; /* เปลี่ยนเป็นสมูท */
-            transform: none !important; /* 📌 บังคับห้ามขยับเด็ดขาด */
-        }}
-
-        /* เปลี่ยนแค่สี ไม่ให้ปุ่มเด้งขยายตอน Hover */
-        div[data-testid="stPopoverBody"] button:hover {{
-            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important;
-            color: #FFFFFF !important;
-            box-shadow: 0 4px 20px rgba(255, 165, 0, 0.6) !important;
-            transform: none !important; /* 📌 บังคับห้ามขยับเด็ดขาด */
-        }}
         </style>
         """
         st.markdown(css, unsafe_allow_html=True)
@@ -111,7 +74,6 @@ def set_sidebar_background(image_file):
 set_sidebar_background("sidebar_bg.jpg") 
 
 # 2. แปลงรูปภาพ bg_lotus.jpg ให้เป็น Base64 อัตโนมัติสำหรับทำพื้นหลังตรงกลาง
-import os
 lotus_img_path = "bg_lotus.jpg"
 lotus_base64 = ""
 if os.path.exists(lotus_img_path):
@@ -133,15 +95,12 @@ st.markdown(f"""
         background-attachment: fixed !important;
     }}
     
-    /* 📌 ปิดการเด้งของปุ่มทั้งหมดในเว็บแบบถาวร หักล้างโค้ดที่ซ่อนอยู่ */
     button:hover, 
     .stButton > button:hover, 
-    div[data-testid="stExpander"]:hover,
-    div[data-testid="stPopoverBody"] button:hover {{
+    div[data-testid="stExpander"]:hover {{
         transform: none !important;
     }}
 
-    /* 📌 ขยายพื้นที่แชท (สำหรับจอคอมพิวเตอร์) */
     .block-container {{
         max-width: 100% !important;
         width: 100% !important;
@@ -159,88 +118,6 @@ st.markdown(f"""
         padding-right: 5rem !important;
     }}
 
-    /* 📌 บังคับจัดกึ่งกลางให้โลโก้ */
-    [data-testid="stVerticalBlock"] > div:has(img) {{
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        width: 100%;
-    }}
-
-    /* 📌 ขยับหัวข้อข้อความมาทางซ้ายเพื่อให้คำว่า "สิทธิ" ตรงกับโลโก้พอดี */
-    .main-title, .sub-title {{
-        text-align: center !important;
-        width: 100% !important;
-        transform: translateX(-35px) !important; 
-    }}
-
-    /* 📌 ล็อคช่องพิมพ์ข้อความด้านล่างให้อยู่กับที่ (สำหรับจอคอม) */
-    [data-testid="stChatInput"] {{
-        position: fixed !important;
-        bottom: 20px !important;
-        left: 55% !important;
-        transform: translateX(-50%) !important;
-        width: 65% !important;
-        z-index: 99999 !important;
-        background: rgba(255, 255, 255, 0.95) !important;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
-        border-radius: 16px !important;
-    }}
-    
-    button[title="View fullscreen"], [data-testid="stElementToolbar"] {{ display: none !important; }}
-    hr {{ margin: 15px 0; border: 0; border-top: 1px solid #E0E0E0; }}
-    
-    .stChatMessage {{ padding: 6px 10px !important; font-size: 14px !important; }}
-    .stChatMessage[data-testid="stChatMessage"]:has(div[aria-label="Chat message from user"]) {{
-        flex-direction: row-reverse !important;
-        text-align: right !important;
-        background-color: #FFE4E1 !important;
-        border-radius: 14px 14px 0px 14px !important;
-        margin-left: auto !important;
-        max-width: 75% !important;
-        width: fit-content !important;
-        padding: 8px 12px !important;
-    }}
-    .stChatMessage[data-testid="stChatMessage"]:has(div[aria-label="Chat message from user"]) div[data-testid="stMarkdownContainer"] p {{ text-align: right !important; }}
-    .stChatMessage[data-testid="stChatMessage"]:has(div[aria-label="Chat message from assistant"]) {{
-        background-color: #FFFFFF !important;
-        border-radius: 14px 14px 14px 0px !important;
-        margin-right: auto !important;
-        max-width: 80% !important;
-        border: 1px solid #FFD1DC !important;
-        padding: 8px 12px !important;
-    }}
-    .stChatMessage[data-testid="stChatMessage"]:has(div[aria-label="Chat message from assistant"]) div[data-testid="stMarkdownContainer"] p {{ text-align: left !important; }}
-
-    /* ดีไซน์วงกลมหมุนๆ (Loading Spinner) แบบสมูท */
-    .loading-container {{
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        font-family: 'Sarabun', sans-serif;
-        font-size: 14px;
-        color: #555555;
-    }}
-    .spinner {{
-        width: 20px;
-        height: 20px;
-        border: 3px solid #FFC0CB;
-        border-top: 3px solid #FF1493;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-    }}
-    @keyframes spin {{
-        0% {{ transform: rotate(0deg); }}
-        100% {{ transform: rotate(360deg); }}
-    }}
-
-    /* 🚫 ซ่อน Header ส่วนเกิน แต่คงปุ่มเปิด-ปิดเมนู Sidebar ไว้ให้แสดงเป็นปุ่มลอย */
-    header[data-testid="stHeader"] {{
-        background: transparent !important;
-    }}
-    
-    /* 📌 บังคับให้ปุ่มเปิด-ปิดเมนู Sidebar (Hamburger) แสดงผลเป็นปุ่มลอยเด่นมุมซ้ายบน */
     [data-testid="collapsedControl"] {{
         display: flex !important;
         visibility: visible !important;
@@ -264,49 +141,20 @@ st.markdown(f"""
         height: 24px !important;
     }}
 
-    #MainMenu {{
-        visibility: hidden !important;
-    }}
-    footer {{
-        display: none !important;
-    }}
-    .viewerBadge_container_link, .viewerBadge_link {{
+    #MainMenu, footer {{
         display: none !important;
     }}
 
-    /* ========================================================
-       📱 แก้ไขสำหรับมือถือโดยเฉพาะ (ให้แชทกว้างเต็มจอแบบ Gemini)
-       ======================================================== */
     @media (max-width: 768px) {{
-        /* 📌 บังคับ Sidebar ในมือถือให้กว้างเต็มจอพอดีเป๊ะ ไม่ล้นขอบ */
         [data-testid="stSidebar"] {{
             width: 100% !important;
             max-width: 100% !important;
             min-width: 100% !important;
         }}
-
-        /* ลดขอบซ้ายขวาของหน้าจอหลักลง ให้กินพื้นที่น้อยที่สุด */
         .block-container {{
             padding-left: 1rem !important;
             padding-right: 1rem !important;
             padding-top: 6rem !important;
-        }}
-        
-        /* ขยายกล่องแชทฝั่ง User ให้กว้างเกือบเต็มจอ */
-        .stChatMessage[data-testid="stChatMessage"]:has(div[aria-label="Chat message from user"]) {{
-            max-width: 95% !important;
-        }}
-        
-        /* ขยายกล่องแชทฝั่ง AI ให้กว้างเกือบเต็มจอ */
-        .stChatMessage[data-testid="stChatMessage"]:has(div[aria-label="Chat message from assistant"]) {{
-            max-width: 95% !important;
-        }}
-
-        /* จัดช่องพิมพ์ด้านล่างให้สมดุลและอยู่ตรงกลางจอ */
-        [data-testid="stChatInput"] {{
-            width: 95% !important;
-            left: 50% !important;
-            transform: translateX(-50%) !important;
         }}
     }}
     </style>
@@ -339,7 +187,6 @@ for message in st.session_state.messages:
 # 8. จัดการคำตอบ AI
 if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
     last_user_msg = st.session_state.messages[-1]
-    
     query_text = last_user_msg.get("prompt") or last_user_msg.get("text") or last_user_msg.get("content", "")
     has_file = "file" in last_user_msg and last_user_msg["file"] is not None
     
@@ -368,7 +215,6 @@ if st.session_state.messages and st.session_state.messages[-1]["role"] == "user"
             """,
             unsafe_allow_html=True
         )
-        
         ai_stream = get_ai_response(ai_payload)
         reply = message_placeholder.write_stream(ai_stream)
         
@@ -393,14 +239,13 @@ if prompt_container:
         user_text = str(prompt_container)
 
     message_data = {"role": "user", "text": user_text if user_text else ""}
-    
     if uploaded_files:
         message_data["file"] = uploaded_files[0]
         
     if user_text or uploaded_files:
         st.session_state.messages.append(message_data)
         
-        # 📌 🌟 สั่งซ่อน/พับเก็บหน้าต่าง Sidebar ทันทีที่ผู้ใช้ส่งข้อความหรือเลือกเมนู
+        # 📌 สั่งพับเก็บหน้าต่าง Sidebar ทันทีที่ส่งข้อความหรือเลือกเมนู
         st.session_state.sidebar_state = "collapsed"
         st.rerun()
 
