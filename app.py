@@ -77,7 +77,7 @@ if os.path.exists(lotus_img_path):
     with open(lotus_img_path, "rb") as f:
         lotus_base64 = base64.b64encode(f.read()).decode()
 
-# 3. ปรับแต่ง CSS หลัก (คืนชีพปุ่มเปิดเมนู และซ่อนของกวนใจแบบปลอดภัย)
+# 3. ปรับแต่ง CSS หลัก (ท่าไม้ตายลบปุ่ม + ดันกล่องแชททับ)
 st.markdown(f"""
     <style>
     html, body {{
@@ -95,42 +95,30 @@ st.markdown(f"""
     .block-container {{
         max-width: 100% !important;
         width: 100% !important;
-        padding-top: 5rem !important; 
+        padding-top: 4rem !important; 
         padding-bottom: 12rem !important; 
         padding-left: 5rem !important;
         padding-right: 5rem !important;
     }}
 
-    /* 📌 ซ่อนขยะเบื้องต้น (แต่ไม่ซ่อน header เพราะเดี๋ยวปุ่มเมนูหาย) */
-    #MainMenu {{ visibility: hidden !important; }}
-    footer {{ visibility: hidden !important; }}
-    .stDeployButton, [data-testid="manage-app-button"], div[class^="viewerBadge"] {{ display: none !important; opacity: 0 !important; }}
-
-    /* 📌 คืนชีพปุ่มเปิด Sidebar (ปุ่ม 3 ขีด มุมซ้ายบน) ให้สวยงาม */
-    [data-testid="collapsedControl"] {{
-        display: flex !important;
-        visibility: visible !important;
-        position: fixed !important;
-        top: 15px !important;
-        left: 15px !important;
-        z-index: 999999 !important;
-        background-color: #ffffff !important;
-        border: 2px solid #FF80AB !important;
-        border-radius: 50% !important;
-        width: 45px !important;
-        height: 45px !important;
-        box-shadow: 0 4px 12px rgba(233, 30, 99, 0.3) !important;
-        justify-content: center !important;
-        align-items: center !important;
+    /* 📌 รักษาปุ่มเมนูมุมซ้ายบนไว้ แต่ซ่อนแถบเครื่องมือมุมขวาบน (Fork/GitHub) */
+    header[data-testid="stHeader"] {{
+        background: transparent !important;
     }}
-    
-    [data-testid="collapsedControl"] svg {{
-        fill: #E91E63 !important;
-        width: 24px !important;
-        height: 24px !important;
+    [data-testid="stToolbar"] {{
+        display: none !important;
     }}
 
-    /* จัดรูปแบบกล่องแชท */
+    /* 🚨 ท่าไม้ตาย 1: ใช้ CSS กวาดล้างปุ่มแดง/ม่วงทุกชื่อคลาสที่เป็นไปได้ 🚨 */
+    #MainMenu, footer {{ display: none !important; visibility: hidden !important; }}
+    .stDeployButton {{ display: none !important; opacity: 0 !important; pointer-events: none !important; }}
+    #manage-app-button {{ display: none !important; opacity: 0 !important; pointer-events: none !important; }}
+    [data-testid="manage-app-button"] {{ display: none !important; opacity: 0 !important; pointer-events: none !important; }}
+    div[class*="viewerBadge"] {{ display: none !important; opacity: 0 !important; pointer-events: none !important; }}
+    div[class*="styles_viewerBadge"] {{ display: none !important; opacity: 0 !important; pointer-events: none !important; }}
+    iframe[title*="Streamlit"] {{ display: none !important; opacity: 0 !important; pointer-events: none !important; }}
+
+    /* จัดรูปแบบกล่องแชทไร้เส้นขอบ */
     [data-testid="stChatMessage"] {{
         padding: 12px 16px !important;
         font-size: 15px !important;
@@ -169,20 +157,27 @@ st.markdown(f"""
 
     /* 📱 ปรับแต่งสำหรับหน้าจอมือถือโดยเฉพาะ */
     @media (max-width: 768px) {{
+        [data-testid="stSidebar"] {{
+            min-width: 0px !important;
+            max-width: 0px !important;
+            width: 0px !important;
+            overflow: hidden !important;
+        }}
         .block-container {{
             padding-left: 0.8rem !important;
             padding-right: 0.8rem !important;
             padding-bottom: 14rem !important;
         }}
         
+        /* 🚨 ท่าไม้ตาย 2: ดันกล่องแชทให้อยู่ "เลเยอร์บนสุด" (z-index 99999999) เหยียบปุ่มมิด! */
         [data-testid="stChatInput"] {{
             position: fixed !important;
-            bottom: 10px !important;
+            bottom: 15px !important;
             left: 50% !important;
             transform: translateX(-50%) !important;
-            width: 98% !important;
-            z-index: 999999 !important;
-            background: rgba(255, 255, 255, 0.98) !important;
+            width: 96% !important;
+            z-index: 99999999 !important; 
+            background: rgba(255, 255, 255, 1) !important; /* พื้นหลังทึบ 100% บังปุ่มสนิท */
             box-shadow: 0 -4px 15px rgba(0,0,0,0.15) !important;
             border-radius: 12px !important;
         }}
@@ -299,45 +294,43 @@ if prompt_container:
         st.session_state.messages.append(message_data)
         st.rerun()
 
-# 11. สคริปต์ JavaScript: เพชฌฆาตกำจัด 2 ปุ่มล่างขวาอย่างต่อเนื่อง และจัดการเลื่อนแชท
-components.html(
-    """
-    <script>
-        const doc = window.parent.document;
-        
-        // 1. ฟังก์ชันเพชฌฆาต: สแกนหาและลบปุ่มสีแดง (Deploy) และปุ่มสีม่วง (Manage App) ให้หายสาบสูญ
-        function killAnnoyingButtons() {
-            const badButtons = doc.querySelectorAll('.stDeployButton, [data-testid="manage-app-button"], [class*="viewerBadge"]');
-            badButtons.forEach(btn => {
-                btn.style.setProperty('display', 'none', 'important');
-                btn.style.setProperty('opacity', '0', 'important');
-                btn.style.setProperty('pointer-events', 'none', 'important');
-            });
-        }
-        
-        // ให้สคริปต์ทำงานทุกๆ 0.5 วินาที เพื่อดักลบปุ่มทันทีที่มันแอบโหลดขึ้นมาทีหลัง
-        setInterval(killAnnoyingButtons, 500);
+# 11. สคริปต์ JavaScript แบบมีเกราะป้องกัน: เลื่อนแชท + แอบลบปุ่ม (ไม่พังแม้โดนบล็อก)
+if len(st.session_state.messages) > 0:
+    components.html(
+        """
+        <script>
+            function safeManageUI() {
+                try {
+                    const doc = window.parent.document;
+                    
+                    // สแกนลบปุ่มกวนใจ
+                    const badBadges = doc.querySelectorAll('.stDeployButton, [id*="manage-app"], [class*="viewerBadge"]');
+                    badBadges.forEach(btn => {
+                        btn.style.setProperty('display', 'none', 'important');
+                        btn.style.setProperty('opacity', '0', 'important');
+                    });
 
-        // 2. ฟังก์ชันช่วยพับหน้าต่างและเลื่อนแชทลงเวลาคุย
-        function autoCloseAndScroll() {
-            const mainArea = doc.querySelector('section.main');
-            if (mainArea) {
-                mainArea.click();
-                mainArea.scrollTo({
-                    top: mainArea.scrollHeight,
-                    behavior: 'smooth'
-                });
+                    // พับ Sidebar และเลื่อนแชทลง
+                    const mainArea = doc.querySelector('section.main');
+                    if (mainArea) {
+                        mainArea.click();
+                        mainArea.scrollTo({ top: mainArea.scrollHeight, behavior: 'smooth' });
+                    }
+                    const chatMessages = doc.querySelectorAll('[data-testid="stChatMessage"]');
+                    if (chatMessages.length > 0) {
+                        chatMessages[chatMessages.length - 1].scrollIntoView({ behavior: 'smooth', block: 'end' });
+                    }
+                } catch(e) {
+                    // หากเซิร์ฟเวอร์บล็อก จะไม่ฟ้อง Error ขาวโพลนอีกต่อไป
+                    console.log("UI Adjusted Safely.");
+                }
             }
-            const chatMessages = doc.querySelectorAll('[data-testid="stChatMessage"]');
-            if (chatMessages.length > 0) {
-                const lastMessage = chatMessages[chatMessages.length - 1];
-                lastMessage.scrollIntoView({ behavior: 'smooth', block: 'end' });
-            }
-        }
-        setTimeout(autoCloseAndScroll, 200);
-        setTimeout(autoCloseAndScroll, 600);
-    </script>
-    """,
-    height=0,
-    width=0,
-)
+
+            safeManageUI();
+            setTimeout(safeManageUI, 500);
+            setInterval(safeManageUI, 2000);
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
