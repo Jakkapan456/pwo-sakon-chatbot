@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
-# 📌 ฟังก์ชันตั้งค่า Sidebar (เติมคำสั่งเรียกรูปภาพ sidebar_bg.jpg กลับมาแบบสมบูรณ์)
+# 📌 ฟังก์ชันตั้งค่า Sidebar (แก้ไขฟอร์แมตปีกกาและเอา f-string ออก ป้องกัน Error ถาวร)
 def set_sidebar_background(image_file):
     try:
         encoded_string = ""
@@ -23,6 +23,7 @@ def set_sidebar_background(image_file):
             with open(image_file, "rb") as f:
                 encoded_string = base64.b64encode(f.read()).decode()
         
+        # ใช้สตริงธรรมดาและเบิ้ลปีกกาเฉพาะจุดที่ใส่ตัวแปร
         css = f"""
         <style>
         [data-testid="stSidebar"] {{
@@ -30,7 +31,7 @@ def set_sidebar_background(image_file):
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-        }
+        }}
         
         [data-testid="stSidebar"] [data-testid="stExpander"], 
         [data-testid="stSidebar"] button,
