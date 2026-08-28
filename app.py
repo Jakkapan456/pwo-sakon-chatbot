@@ -2,6 +2,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 import base64
 import os
+import re
 from responses import get_ai_response
 from components import render_header, render_sidebar
 from PIL import Image
@@ -221,7 +222,20 @@ render_sidebar()
 if len(st.session_state.messages) == 0:
     render_header()
 
-# 7. แสดงกล่องแชททั้งหมด
+# 7. ฟังก์ชันช่วยแกะลิงก์ URL ออกมาจากข้อความของ AI เพื่อแปลงเป็นปุ่มกดภายนอก
+def extract_links_and_render(text):
+    st.markdown(text, unsafe_allow_html=True)
+    # ค้นหา URL ทั้งหมดในข้อความ (http:// หรือ https://)
+    urls = re.findall(r'(https?://[^\s]+)', text)
+    if urls:
+        st.markdown("---")
+        st.write("🌐 **เปิดเว็บไซต์ / เอกสารภายนอกในเบราว์เซอร์:**")
+        for i, url in enumerate(set(urls)):
+            # ทำความสะอาด URL เผื่อติดเครื่องหมายปิดท้าย
+            clean_url = url.strip('.,)];?>')
+            st.link_button(f"🔗 เปิดลิงก์ภายนอก (หน้าที่ {i+1})", clean_url, use_container_width=True)
+
+# 8. แสดงกล่องแชททั้งหมด
 for message in st.session_state.messages:
     avatar_icon = "✨" if message["role"] == "assistant" else "👤"
     with st.chat_message(message["role"], avatar=avatar_icon):
@@ -233,9 +247,9 @@ for message in st.session_state.messages:
                 st.image(message["file"], width=300)
         else:
             content = message["content"]
-            st.markdown(content, unsafe_allow_html=True)
+            extract_links_and_render(content)
 
-# 8. จัดการคำตอบ AI
+# 9. จัดการคำตอบ AI
 if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
     last_user_msg = st.session_state.messages[-1]
     query_text = last_user_msg.get("prompt") or last_user_msg.get("text") or last_user_msg.get("content", "")
@@ -272,7 +286,7 @@ if st.session_state.messages and st.session_state.messages[-1]["role"] == "user"
     st.session_state.messages.append({"role": "assistant", "content": reply})
     st.rerun()
     
-# 9. ช่องพิมพ์ข้อความ
+# 10. ช่องพิมพ์ข้อความ
 prompt_container = st.chat_input("พิมพ์ข้อความที่นี่", accept_file=True, file_type=["jpg", "jpeg", "png", "pdf"])
 
 if prompt_container:
@@ -296,32 +310,15 @@ if prompt_container:
     if user_text or uploaded_files:
         st.session_state.messages.append(message_data)
         
-        # 📌 สั่งพับเก็บ Sidebar อัตโนมัติจากฝั่ง Python ทันทีเมื่อส่งข้อความ
+        # 📌 สั่งพับเก็บ Sidebar อัตโนมัติทันทีจากฝั่ง Python เมื่อกดส่งข้อความ
         st.session_state.sidebar_state = "collapsed"
         st.rerun()
 
-# 10. สคริปต์ JavaScript: บังคับลิงก์ทุกตัวในแชทให้หลุดออกนอก In-App Browser ของ Facebook ด้วย window.top.open
+# 11. สคริปต์ JavaScript: เลื่อนแชทลงล่างอัตโนมัติ
 if len(st.session_state.messages) > 0:
     components.html(
         """
         <script>
-            function forceExternalBrowserRedirect() {
-                const doc = window.parent.document;
-                
-                // ดักจับลิงก์ทั้งหมดในหน้าแชท แล้วบังคับเปิดออกนอกแอปผ่าน window.top
-                const links = doc.querySelectorAll('.stMarkdown a, [data-testid="stChatMessage"] a');
-                links.forEach(link => {
-                    link.setAttribute('target', '_blank');
-                    link.setAttribute('rel', 'external noopener noreferrer');
-                    
-                    // ป้องกัน event ปกติ แล้วสั่งเปิดข้ามเฟรมในระดับบนสุดเพื่อให้ Facebook เด้งถามออกเบราว์เซอร์
-                    link.onclick = function(e) {
-                        e.preventDefault();
-                        window.top.open(this.href, '_blank');
-                    };
-                });
-            }
-
             function forceScrollToBottom() {
                 const mainSection = window.parent.document.querySelector('section.main');
                 if (mainSection) {
@@ -338,7 +335,6 @@ if len(st.session_state.messages) > 0:
                 }
             }
 
-            forceExternalBrowserRedirect();
             forceScrollToBottom();
             setTimeout(forceScrollToBottom, 50);
             setTimeout(forceScrollToBottom, 150);
