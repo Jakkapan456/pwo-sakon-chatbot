@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
-# 📌 ฟังก์ชันสำหรับตั้งค่ารูปภาพพื้นหลัง Sidebar (แก้ปัญหา f-string เป็นสตริงธรรมดาแล้ว)
+# 📌 ฟังก์ชันตั้งค่า Sidebar แบบเคลียร์ f-string ออกทั้งหมด ป้องกัน Error 100%
 def set_sidebar_background(image_file):
     try:
         encoded_string = ""
@@ -80,7 +80,7 @@ if os.path.exists(lotus_img_path):
     with open(lotus_img_path, "rb") as f:
         lotus_base64 = base64.b64encode(f.read()).decode()
 
-# 3. ปรับแต่ง CSS หลักของหน้าเว็บ (ใช้สตริงธรรมดา ป้องกัน Error ปีกกา)
+# 3. ปรับแต่ง CSS หลักของหน้าเว็บ
 st.markdown("""
     <style>
     html, body {
