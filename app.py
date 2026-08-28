@@ -70,17 +70,16 @@ def set_sidebar_background(image_file):
     except Exception as e:
         pass
 
-# 📌 เรียกใช้งานฟังก์ชันตั้งค่าภาพพื้นหลัง Sidebar
 set_sidebar_background("sidebar_bg.jpg") 
 
-# 2. แปลงรูปภาพ bg_lotus.jpg สำหรับทำพื้นหลังหน้าจอหลักตรงกลาง
+# 2. แปลงรูปภาพ bg_lotus.jpg สำหรับทำพื้นหลังหน้าจอหลัก
 lotus_img_path = "bg_lotus.jpg"
 lotus_base64 = ""
 if os.path.exists(lotus_img_path):
     with open(lotus_img_path, "rb") as f:
         lotus_base64 = base64.b64encode(f.read()).decode()
 
-# 3. ปรับแต่ง CSS หลักของหน้าเว็บ (รวมถึงสไตล์ลิงก์และมือถือ)
+# 3. ปรับแต่ง CSS หลัก (แก้กล่องพิมพ์ข้อความบนมือถือให้อยู่ด้านบนแป้นพิมพ์ตลอดเวลา และสไตล์ลิงก์)
 st.markdown(f"""
     <style>
     html, body {{
@@ -105,8 +104,8 @@ st.markdown(f"""
         max-width: 100% !important;
         width: 100% !important;
         min-height: 100vh !important;
-        padding-top: 12rem !important; 
-        padding-bottom: 8rem !important; 
+        padding-top: 10rem !important; 
+        padding-bottom: 7rem !important; 
         margin: 0 !important;
         background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url("data:image/jpeg;base64,{lotus_base64}") !important;
         background-size: cover !important;
@@ -145,13 +144,13 @@ st.markdown(f"""
         display: none !important;
     }}
 
-    /* 📌 บังคับลิงก์ทุกตัวในกล่องข้อความให้เปิดแท็บใหม่เสมอ */
     .stMarkdown a {{
         color: #E91E63 !important;
         font-weight: bold !important;
         text-decoration: underline !important;
     }}
 
+    /* 📱 ปรับแต่งสำหรับหน้าจอมือถือโดยเฉพาะ */
     @media (max-width: 768px) {{
         [data-testid="stSidebar"] {{
             width: 100% !important;
@@ -159,9 +158,23 @@ st.markdown(f"""
             min-width: 100% !important;
         }}
         .block-container {{
-            padding-left: 1rem !important;
-            padding-right: 1rem !important;
-            padding-top: 6rem !important;
+            padding-left: 0.8rem !important;
+            padding-right: 0.8rem !important;
+            padding-top: 5rem !important;
+            padding-bottom: 7rem !important;
+        }}
+        
+        /* 📌 ล็อคกล่องพิมพ์ข้อความให้อยู่ติดขอบล่าง / เหนือแป้นพิมพ์ตลอดเวลา ไม่โดนบัง */
+        [data-testid="stChatInput"] {{
+            position: fixed !important;
+            bottom: 5px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            width: 98% !important;
+            z-index: 999999 !important;
+            background: rgba(255, 255, 255, 0.98) !important;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.15) !important;
+            border-radius: 12px !important;
         }}
     }}
     </style>
@@ -178,7 +191,7 @@ render_sidebar()
 if len(st.session_state.messages) == 0:
     render_header()
 
-# 7. แสดงกล่องแชททั้งหมด (เรนเดอร์ข้อความ AI ด้วย unsafe_allow_html เพื่อให้ลิงก์กดเปิดหน้าเว็บได้จริง)
+# 7. แสดงกล่องแชททั้งหมด
 for message in st.session_state.messages:
     avatar_icon = "✨" if message["role"] == "assistant" else "👤"
     with st.chat_message(message["role"], avatar=avatar_icon):
@@ -254,29 +267,36 @@ if prompt_container:
         st.session_state.messages.append(message_data)
         st.rerun()
 
-# 10. สคริปต์ Auto-scroll + JavaScript สั่งปิด Sidebar อัตโนมัติบนมือถือทันที
+# 10. สคริปต์ JavaScript: จัดการเปิดลิงก์แท็บใหม่ + ปิด Sidebar บนมือถืออัตโนมัติ + เลื่อนแชทลงล่าง
 if len(st.session_state.messages) > 0:
     components.html(
         """
         <script>
-            // 📌 ฟังก์ชันสั่งปิด/พับเก็บ Sidebar อัตโนมัติบนมือถือเมื่อมีการส่งข้อความหรือเลือกคำถาม
-            function autoCloseMobileSidebar() {
+            function processMobileInteractions() {
+                const doc = window.parent.document;
+                
+                // 1. บังคับลิงก์ทุกตัวในแชทให้เปิดแท็บใหม่ (target="_blank")
+                const links = doc.querySelectorAll('.stMarkdown a, [data-testid="stChatMessage"] a');
+                links.forEach(link => {
+                    link.setAttribute('target', '_blank');
+                    link.setAttribute('rel', 'noopener noreferrer');
+                });
+
+                // 2. ถ้าอยู่บนมือถือ ให้สั่งปิด/พับเก็บ Sidebar ทันทีที่ส่งข้อความหรือเลือกคำถาม
                 if (window.parent.innerWidth <= 768) {
-                    const closeBtns = window.parent.document.querySelectorAll('button');
-                    closeBtns.forEach(btn => {
-                        // ค้นหาปุ่มปิด Sidebar ที่เป็นไอคอนกากบาทหรือปุ่มย้อนกลับในหน้าจอมือถือ
-                        if (btn.getAttribute('aria-expanded') === 'true' || btn.innerHTML.includes('closed') || btn.querySelector('svg')) {
-                            const ariaLabel = btn.getAttribute('aria-label') || '';
-                            if (ariaLabel.toLowerCase().includes('sidebar') || btn.className.includes('close')) {
-                                btn.click();
-                            }
+                    // ค้นหาปุ่มปิดหรือตัวควบคุม Sidebar แล้วคลิกซ่อน
+                    const closeButtons = doc.querySelectorAll('button');
+                    closeButtons.forEach(btn => {
+                        const label = btn.getAttribute('aria-label') || '';
+                        if (label.toLowerCase().includes('close') || label.toLowerCase().includes('sidebar')) {
+                            btn.click();
                         }
                     });
-                    
-                    // สั่งคลิกจำลองบริเวณพื้นที่หลักเพื่อบังคับพับ Sidebar บนมือถือ
-                    const mainContent = window.parent.document.querySelector('section.main');
-                    if (mainContent) {
-                        mainContent.click();
+
+                    // คลิกที่พื้นที่หลักเพื่อซ่อน Sidebar อัตโนมัติ
+                    const mainArea = doc.querySelector('section.main');
+                    if (mainArea) {
+                        mainArea.click();
                     }
                 }
             }
@@ -297,7 +317,7 @@ if len(st.session_state.messages) > 0:
                 }
             }
 
-            autoCloseMobileSidebar();
+            processMobileInteractions();
             forceScrollToBottom();
             setTimeout(forceScrollToBottom, 50);
             setTimeout(forceScrollToBottom, 150);
