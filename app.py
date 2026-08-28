@@ -6,12 +6,12 @@ from components import render_header, render_sidebar
 from PIL import Image
 from config import LOGO_URL  
 
-# 1. ตั้งค่าหน้าเว็บ
+# 1. ตั้งค่าหน้าเว็บ (ปรับ initial_sidebar_state เป็น auto เพื่อให้ควบคุมการพับหน้าต่างได้สมูทขึ้นบนมือถือ)
 st.set_page_config(
     page_title="AI ผู้ช่วยสิทธิสวัสดิการ พมจ.สกลนคร",
     page_icon=LOGO_URL,  
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="auto"
 )
 
 # 📌 ฟังก์ชันสำหรับตั้งค่ารูปภาพพื้นหลัง Sidebar พร้อมแต่งกล่องเมนูและ Popover เป็นสีเหลืองทองอร่าม
@@ -28,7 +28,7 @@ def set_sidebar_background(image_file):
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-        }}
+        }
         
         /* 🌟 ตกแต่งกล่องเมนูและ Expander ใน Sidebar ให้เป็นสีเหลืองทองอร่าม */
         [data-testid="stSidebar"] [data-testid="stExpander"], 
@@ -278,6 +278,13 @@ st.markdown(f"""
        📱 แก้ไขสำหรับมือถือโดยเฉพาะ (ให้แชทกว้างเต็มจอแบบ Gemini)
        ======================================================== */
     @media (max-width: 768px) {{
+        /* 📌 บังคับ Sidebar ในมือถือให้กว้างเต็มจอพอดีเป๊ะ ไม่ล้นขอบ */
+        [data-testid="stSidebar"] {{
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 100% !important;
+        }}
+
         /* ลดขอบซ้ายขวาของหน้าจอหลักลง ให้กินพื้นที่น้อยที่สุด */
         .block-container {{
             padding-left: 1rem !important;
@@ -392,6 +399,9 @@ if prompt_container:
         
     if user_text or uploaded_files:
         st.session_state.messages.append(message_data)
+        
+        # 📌 🌟 สั่งซ่อน/พับเก็บหน้าต่าง Sidebar ทันทีที่ผู้ใช้ส่งข้อความหรือเลือกเมนู
+        st.session_state.sidebar_state = "collapsed"
         st.rerun()
 
 # 10. สคริปต์ Auto-scroll

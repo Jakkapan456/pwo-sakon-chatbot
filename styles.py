@@ -73,4 +73,15 @@ def get_ui_css():
     [data-testid="stStatusWidget"] {{display: none !important;}}
     div[class*="viewerBadge"] {{display: none !important;}}
     .styles_viewerBadge__1yG5_ {{display: none !important;}}
+
+    /* ========================================================
+       📱 6. ปรับแต่ง Sidebar (ลิ้นชักเมนู) สำหรับหน้าื้อมือถือ
+       ======================================================== */
+    @media (max-width: 768px) {{
+        [data-testid="stSidebar"] {{
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 100% !important;
+        }}
+    }}
     </style>"""
