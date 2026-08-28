@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
-# 📌 ฟังก์ชันตั้งค่า Sidebar (แก้ไขฟอร์แมตปีกกาและเอา f-string ออก ป้องกัน Error ถาวร)
+# 📌 ฟังก์ชันตั้งค่า Sidebar
 def set_sidebar_background(image_file):
     try:
         encoded_string = ""
@@ -23,7 +23,6 @@ def set_sidebar_background(image_file):
             with open(image_file, "rb") as f:
                 encoded_string = base64.b64encode(f.read()).decode()
         
-        # ใช้สตริงธรรมดาและเบิ้ลปีกกาเฉพาะจุดที่ใส่ตัวแปร
         css = f"""
         <style>
         [data-testid="stSidebar"] {{
@@ -81,7 +80,7 @@ if os.path.exists(lotus_img_path):
     with open(lotus_img_path, "rb") as f:
         lotus_base64 = base64.b64encode(f.read()).decode()
 
-# 3. ปรับแต่ง CSS หลักของหน้าเว็บ
+# 3. ปรับแต่ง CSS หลักของหน้าเว็บ (รวมถึงสไตล์ลิงก์และมือถือ)
 st.markdown(f"""
     <style>
     html, body {{
@@ -146,6 +145,13 @@ st.markdown(f"""
         display: none !important;
     }}
 
+    /* 📌 บังคับลิงก์ทุกตัวในกล่องข้อความให้เปิดแท็บใหม่เสมอ */
+    .stMarkdown a {{
+        color: #E91E63 !important;
+        font-weight: bold !important;
+        text-decoration: underline !important;
+    }}
+
     @media (max-width: 768px) {{
         [data-testid="stSidebar"] {{
             width: 100% !important;
@@ -172,7 +178,7 @@ render_sidebar()
 if len(st.session_state.messages) == 0:
     render_header()
 
-# 7. แสดงกล่องแชททั้งหมด
+# 7. แสดงกล่องแชททั้งหมด (เรนเดอร์ข้อความ AI ด้วย unsafe_allow_html เพื่อให้ลิงก์กดเปิดหน้าเว็บได้จริง)
 for message in st.session_state.messages:
     avatar_icon = "✨" if message["role"] == "assistant" else "👤"
     with st.chat_message(message["role"], avatar=avatar_icon):
@@ -183,7 +189,8 @@ for message in st.session_state.messages:
             if "file" in message and message["file"] is not None:
                 st.image(message["file"], width=300)
         else:
-            st.write(message["content"])
+            content = message["content"]
+            st.markdown(content, unsafe_allow_html=True)
 
 # 8. จัดการคำตอบ AI
 if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
@@ -245,14 +252,35 @@ if prompt_container:
         
     if user_text or uploaded_files:
         st.session_state.messages.append(message_data)
-        st.session_state.sidebar_state = "collapsed"
         st.rerun()
 
-# 10. สคริปต์ Auto-scroll
+# 10. สคริปต์ Auto-scroll + JavaScript สั่งปิด Sidebar อัตโนมัติบนมือถือทันที
 if len(st.session_state.messages) > 0:
     components.html(
         """
         <script>
+            // 📌 ฟังก์ชันสั่งปิด/พับเก็บ Sidebar อัตโนมัติบนมือถือเมื่อมีการส่งข้อความหรือเลือกคำถาม
+            function autoCloseMobileSidebar() {
+                if (window.parent.innerWidth <= 768) {
+                    const closeBtns = window.parent.document.querySelectorAll('button');
+                    closeBtns.forEach(btn => {
+                        // ค้นหาปุ่มปิด Sidebar ที่เป็นไอคอนกากบาทหรือปุ่มย้อนกลับในหน้าจอมือถือ
+                        if (btn.getAttribute('aria-expanded') === 'true' || btn.innerHTML.includes('closed') || btn.querySelector('svg')) {
+                            const ariaLabel = btn.getAttribute('aria-label') || '';
+                            if (ariaLabel.toLowerCase().includes('sidebar') || btn.className.includes('close')) {
+                                btn.click();
+                            }
+                        }
+                    });
+                    
+                    // สั่งคลิกจำลองบริเวณพื้นที่หลักเพื่อบังคับพับ Sidebar บนมือถือ
+                    const mainContent = window.parent.document.querySelector('section.main');
+                    if (mainContent) {
+                        mainContent.click();
+                    }
+                }
+            }
+
             function forceScrollToBottom() {
                 const mainSection = window.parent.document.querySelector('section.main');
                 if (mainSection) {
@@ -269,6 +297,7 @@ if len(st.session_state.messages) > 0:
                 }
             }
 
+            autoCloseMobileSidebar();
             forceScrollToBottom();
             setTimeout(forceScrollToBottom, 50);
             setTimeout(forceScrollToBottom, 150);
