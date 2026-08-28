@@ -79,7 +79,7 @@ if os.path.exists(lotus_img_path):
     with open(lotus_img_path, "rb") as f:
         lotus_base64 = base64.b64encode(f.read()).decode()
 
-# 3. ปรับแต่ง CSS หลัก (เพิ่ม padding-bottom ให้สูงขึ้นมากเพื่อไม่ให้ข้อความทับกล่องพิมพ์ และเคลียร์เส้นขาวในแชท)
+# 3. ปรับแต่ง CSS หลัก (เคลียร์เส้นขอบแชท และเว้นระยะพ้นกล่องพิมพ์)
 st.markdown(f"""
     <style>
     html, body {{
@@ -105,7 +105,7 @@ st.markdown(f"""
         width: 100% !important;
         min-height: 100vh !important;
         padding-top: 10rem !important; 
-        padding-bottom: 16rem !important; /* 📌 เพิ่มพื้นที่ด้านล่างให้สูงขึ้นมากๆ ป้องกันข้อความทับกล่องพิมพ์ */
+        padding-bottom: 16rem !important; 
         margin: 0 !important;
         background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url("data:image/jpeg;base64,{lotus_base64}") !important;
         background-size: cover !important;
@@ -144,7 +144,7 @@ st.markdown(f"""
         display: none !important;
     }}
 
-    /* 📌 เคลียร์เส้นขาว เส้นประ และพื้นหลังตกค้างในกล่องข้อความทั้งหมดแบบเบ็ดเสร็จ */
+    /* 📌 เคลียร์เส้นขอบ เส้นประ และพื้นหลังตกค้างในกล่องข้อความทั้งหมดแบบเบ็ดเสร็จ */
     [data-testid="stChatMessage"] {{
         padding: 12px 16px !important;
         font-size: 15px !important;
@@ -192,10 +192,9 @@ st.markdown(f"""
             padding-left: 0.8rem !important;
             padding-right: 0.8rem !important;
             padding-top: 5rem !important;
-            padding-bottom: 18rem !important; /* เว้นขอบล่างเพิ่มเป็นพิเศษสำหรับมือถือ */
+            padding-bottom: 18rem !important;
         }}
         
-        /* ล็อคกล่องพิมพ์ข้อความให้อยู่ด้านบนแป้นพิมพ์ตลอดเวลา */
         [data-testid="stChatInput"] {{
             position: fixed !important;
             bottom: 10px !important;
@@ -296,16 +295,31 @@ if prompt_container:
         
     if user_text or uploaded_files:
         st.session_state.messages.append(message_data)
-        
-        # 📌 สั่งพับเก็บ Sidebar อัตโนมัติจากฝั่ง Python ทันทีเมื่อส่งข้อความ
         st.session_state.sidebar_state = "collapsed"
         st.rerun()
 
-# 10. สคริปต์ JavaScript: จัดการเลื่อนแชทลงล่างอัตโนมัติ
+# 10. สคริปต์ JavaScript: บังคับลิงก์ทุกตัวในแชทให้เด้งออกไปเปิดเบราว์เซอร์ภายนอก (ผ่านแอปภายนอก) และเลื่อนแชทลงล่าง
 if len(st.session_state.messages) > 0:
     components.html(
         """
         <script>
+            function forceExternalBrowserLinks() {
+                const doc = window.parent.document;
+                
+                // ดักจับลิงก์ทั้งหมดในหน้าแชท แล้วบังคับเปิดแท็บใหม่แบบเบราว์เซอร์ภายนอก
+                const links = doc.querySelectorAll('.stMarkdown a, [data-testid="stChatMessage"] a');
+                links.forEach(link => {
+                    link.setAttribute('target', '_blank');
+                    link.setAttribute('rel', 'external noopener noreferrer');
+                    
+                    // ป้องกัน event เดิมแล้วสั่งเปิดผ่าน window.open ออกเบราว์เซอร์นอกทันที
+                    link.onclick = function(e) {
+                        e.preventDefault();
+                        window.parent.open(this.href, '_system');
+                    };
+                });
+            }
+
             function forceScrollToBottom() {
                 const mainSection = window.parent.document.querySelector('section.main');
                 if (mainSection) {
@@ -322,6 +336,7 @@ if len(st.session_state.messages) > 0:
                 }
             }
 
+            forceExternalBrowserLinks();
             forceScrollToBottom();
             setTimeout(forceScrollToBottom, 50);
             setTimeout(forceScrollToBottom, 150);
