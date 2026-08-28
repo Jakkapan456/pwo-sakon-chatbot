@@ -12,7 +12,7 @@ st.set_page_config(
     page_title="AI ผู้ช่วยสิทธิสวัสดิการ พมจ.สกลนคร",
     page_icon=LOGO_URL,  
     layout="wide",
-    initial_sidebar_state="collapsed"  # 📌 ตั้งค่าเริ่มต้นให้ Sidebar พับเก็บไว้ก่อน
+    initial_sidebar_state="collapsed"
 )
 
 # 📌 ฟังก์ชันตั้งค่า Sidebar
@@ -79,7 +79,7 @@ if os.path.exists(lotus_img_path):
     with open(lotus_img_path, "rb") as f:
         lotus_base64 = base64.b64encode(f.read()).decode()
 
-# 3. ปรับแต่ง CSS หลัก (เพิ่ม padding-bottom ให้สูงขึ้น ป้องกันกล่องพิมพ์บังบรรทัดสุดท้ายของ AI)
+# 3. ปรับแต่ง CSS หลัก (เพิ่มดีไซน์แยกแชทซ้าย-ขวาอย่างชัดเจน + ล็อคกล่องพิมพ์ข้อความ)
 st.markdown(f"""
     <style>
     html, body {{
@@ -105,7 +105,7 @@ st.markdown(f"""
         width: 100% !important;
         min-height: 100vh !important;
         padding-top: 10rem !important; 
-        padding-bottom: 12rem !important; /* 📌 เพิ่มพื้นที่ด้านล่างให้สูงขึ้น ไม่ให้กล่องพิมพ์บังข้อความ AI */
+        padding-bottom: 12rem !important; 
         margin: 0 !important;
         background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url("data:image/jpeg;base64,{lotus_base64}") !important;
         background-size: cover !important;
@@ -144,13 +144,42 @@ st.markdown(f"""
         display: none !important;
     }}
 
-    /* 📌 บังคับลิงก์ทุกตัวในแชทให้เปิดแท็บใหม่และรองรับการแตะบนมือถือ */
+    /* 📌 จัดรูปแบบกล่องแชทแยกซ้าย-ขวา (User ชิดขวา / Assistant ชิดซ้าย) */
+    .stChatMessage {{
+        padding: 10px 14px !important;
+        font-size: 15px !important;
+        border-radius: 16px !important;
+        margin-bottom: 12px !important;
+    }}
+
+    /* แชทผู้ใช้ (User) ชิดขวา สีชมพูพาสเทล */
+    [data-testid="stChatMessage"]:has(div[aria-label="Chat message from user"]) {{
+        background-color: #FFE4E1 !important;
+        margin-left: auto !important;
+        margin-right: 0 !important;
+        max-width: 80% !important;
+        width: fit-content !important;
+        border-bottom-right-radius: 4px !important;
+        border: 1px solid #FFB6C1 !important;
+    }}
+
+    /* แชทผู้ช่วย AI ชิดซ้าย สีขาวขอบชมพูอ่อน */
+    [data-testid="stChatMessage"]:has(div[aria-label="Chat message from assistant"]) {{
+        background-color: #FFFFFF !important;
+        margin-left: 0 !important;
+        margin-right: auto !important;
+        max-width: 85% !important;
+        width: fit-content !important;
+        border-bottom-left-radius: 4px !important;
+        border: 1px solid #FFD1DC !important;
+    }}
+
+    /* บังคับลิงก์ให้เปิดแท็บใหม่และกดง่ายขึ้น */
     .stMarkdown a {{
         color: #E91E63 !important;
         font-weight: bold !important;
         text-decoration: underline !important;
         pointer-events: auto !important;
-        cursor: pointer !important;
     }}
 
     /* 📱 ปรับแต่งสำหรับหน้าจอมือถือ */
@@ -164,10 +193,10 @@ st.markdown(f"""
             padding-left: 0.8rem !important;
             padding-right: 0.8rem !important;
             padding-top: 5rem !important;
-            padding-bottom: 14rem !important; /* 📌 เว้นพื้นที่ด้านล่างบนมือถือให้กว้างเป็นพิเศษ */
+            padding-bottom: 14rem !important;
         }}
         
-        /* 📌 ล็อคกล่องพิมพ์ข้อความให้อยู่ด้านบนแป้นพิมพ์ตลอดเวลา */
+        /* ล็อคกล่องพิมพ์ข้อความให้อยู่เหนือกระดานพิมพ์ตลอดเวลา */
         [data-testid="stChatInput"] {{
             position: fixed !important;
             bottom: 10px !important;
@@ -270,24 +299,35 @@ if prompt_container:
         st.session_state.messages.append(message_data)
         st.rerun()
 
-# 10. สคริปต์ JavaScript: บังคับลิงก์เปิดแท็บใหม่ + เลื่อนแชทลงล่าง
+# 10. สคริปต์ JavaScript: บังคับลิงก์เปิดหน้าต่างใหม่เต็มจอ (_top สำหรับมือถือ) + ปิด Sidebar และเลื่อนแชทลงล่าง
 if len(st.session_state.messages) > 0:
     components.html(
         """
         <script>
-            function forceExternalLinksAndScroll() {
+            function processMobileInteractions() {
                 const doc = window.parent.document;
                 
-                // บังคับลิงก์ทุกตัวในแชทให้เปิดแท็บใหม่ผ่าน window.open เพื่อให้แอปในมือถือยอมเด้งออกเว็บ
+                // 1. บังคับลิงก์ทั้งหมดให้ใช้ _top บนมือถือ เพื่อให้ออกนอก In-App Browser (Messenger) ได้
                 const links = doc.querySelectorAll('.stMarkdown a, [data-testid="stChatMessage"] a');
                 links.forEach(link => {
-                    link.setAttribute('target', '_blank');
+                    link.setAttribute('target', '_top');
                     link.setAttribute('rel', 'noopener noreferrer');
-                    link.onclick = function(e) {
-                        e.preventDefault();
-                        window.parent.open(this.href, '_blank');
-                    };
                 });
+
+                // 2. สั่งปิด Sidebar อัตโนมัติเมื่อผู้ใช้พิมพ์หรือกดคำถาม
+                if (window.parent.innerWidth <= 768) {
+                    const closeButtons = doc.querySelectorAll('button');
+                    closeButtons.forEach(btn => {
+                        const label = btn.getAttribute('aria-label') || '';
+                        if (label.toLowerCase().includes('close') || label.toLowerCase().includes('sidebar')) {
+                            btn.click();
+                        }
+                    });
+                    const mainArea = doc.querySelector('section.main');
+                    if (mainArea) {
+                        mainArea.click();
+                    }
+                }
             }
 
             function forceScrollToBottom() {
@@ -306,7 +346,7 @@ if len(st.session_state.messages) > 0:
                 }
             }
 
-            forceExternalLinksAndScroll();
+            processMobileInteractions();
             forceScrollToBottom();
             setTimeout(forceScrollToBottom, 50);
             setTimeout(forceScrollToBottom, 150);
