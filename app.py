@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
-# 📌 ฟังก์ชันสำหรับตั้งค่ารูปภาพพื้นหลัง Sidebar
+# 📌 ฟังก์ชันสำหรับตั้งค่ารูปภาพพื้นหลัง Sidebar (แก้ปัญหา f-string เป็นสตริงธรรมดาแล้ว)
 def set_sidebar_background(image_file):
     try:
         encoded_string = ""
@@ -80,35 +80,33 @@ if os.path.exists(lotus_img_path):
     with open(lotus_img_path, "rb") as f:
         lotus_base64 = base64.b64encode(f.read()).decode()
 
-# 3. ปรับแต่ง CSS หลักของหน้าเว็บ
-st.markdown(f"""
+# 3. ปรับแต่ง CSS หลักของหน้าเว็บ (ใช้สตริงธรรมดา ป้องกัน Error ปีกกา)
+st.markdown("""
     <style>
-    html, body {{
+    html, body {
         scroll-behavior: smooth;
         height: 100%;
-    }}
-    .stApp {{ 
-        background-image: linear-gradient(rgba(255, 240, 245, 0.85), rgba(255, 240, 245, 0.85)), url("data:image/jpeg;base64,{lotus_base64}") !important;
+    }
+    .stApp { 
         background-size: cover !important;
         background-position: center !important;
         background-repeat: no-repeat !important;
         background-attachment: fixed !important;
-    }}
+    }
     
     button:hover, 
     .stButton > button:hover, 
-    div[data-testid="stExpander"]:hover {{
+    div[data-testid="stExpander"]:hover {
         transform: none !important;
-    }}
+    }
 
-    .block-container {{
+    .block-container {
         max-width: 100% !important;
         width: 100% !important;
         min-height: 100vh !important;
         padding-top: 12rem !important; 
         padding-bottom: 8rem !important; 
         margin: 0 !important;
-        background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url("data:image/jpeg;base64,{lotus_base64}") !important;
         background-size: cover !important;
         background-position: center !important;
         background-repeat: no-repeat !important;
@@ -116,9 +114,9 @@ st.markdown(f"""
         box-shadow: none !important;
         padding-left: 5rem !important;
         padding-right: 5rem !important;
-    }}
+    }
 
-    [data-testid="collapsedControl"] {{
+    [data-testid="collapsedControl"] {
         display: flex !important;
         visibility: visible !important;
         position: fixed !important;
@@ -133,30 +131,30 @@ st.markdown(f"""
         box-shadow: 0 4px 12px rgba(233, 30, 99, 0.3) !important;
         justify-content: center !important;
         align-items: center !important;
-    }}
+    }
     
-    [data-testid="collapsedControl"] svg {{
+    [data-testid="collapsedControl"] svg {
         fill: #E91E63 !important;
         width: 24px !important;
         height: 24px !important;
-    }}
+    }
 
-    #MainMenu, footer {{
+    #MainMenu, footer {
         display: none !important;
-    }}
+    }
 
-    @media (max-width: 768px) {{
-        [data-testid="stSidebar"] {{
+    @media (max-width: 768px) {
+        [data-testid="stSidebar"] {
             width: 100% !important;
             max-width: 100% !important;
             min-width: 100% !important;
-        }}
-        .block-container {{
+        }
+        .block-container {
             padding-left: 1rem !important;
             padding-right: 1rem !important;
             padding-top: 6rem !important;
-        }}
-    }}
+        }
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -244,8 +242,6 @@ if prompt_container:
         
     if user_text or uploaded_files:
         st.session_state.messages.append(message_data)
-        
-        # 📌 สั่งพับเก็บหน้าต่าง Sidebar ทันทีที่ส่งข้อความหรือเลือกเมนู
         st.session_state.sidebar_state = "collapsed"
         st.rerun()
 
