@@ -82,7 +82,7 @@ if os.path.exists(lotus_img_path):
     with open(lotus_img_path, "rb") as f:
         lotus_base64 = base64.b64encode(f.read()).decode()
 
-# 3. ปรับแต่ง CSS หลัก (ถอดตัว f ออกแล้ว เพื่อป้องกัน SyntaxError จากปีกกาใน CSS)
+# 3. ปรับแต่ง CSS หลัก (ซ่อนไอคอนมุมขวาล่าง ซ่อน Sidebar สนิทบนมือถือ เคลียร์ขอบแชท)
 st.markdown(f"""
     <style>
     html, body {{
@@ -147,6 +147,15 @@ st.markdown(f"""
         display: none !important;
     }}
 
+    /* 📌 ซ่อนปุ่ม Deploy, ปุ่ม Manage App (สีแดง/ม่วงมุมขวาล่าง) และแบนเนอร์กวนใจ */
+    .stDeployButton, 
+    [data-testid="stToolbar"],
+    [class^="viewerBadge"],
+    [data-testid="stAppViewContainer"] > div:last-child {{
+        display: none !important;
+        visibility: hidden !important;
+    }}
+
     /* 📌 เคลียร์เส้นขอบแชท */
     [data-testid="stChatMessage"] {{
         padding: 12px 16px !important;
@@ -186,6 +195,12 @@ st.markdown(f"""
 
     /* 📱 ปรับแต่งสำหรับหน้าจอมือถือ */
     @media (max-width: 768px) {{
+        [data-testid="stSidebar"] {{
+            min-width: 0px !important;
+            max-width: 0px !important;
+            width: 0px !important;
+            overflow: hidden !important;
+        }}
         .block-container {{
             padding-left: 0.8rem !important;
             padding-right: 0.8rem !important;
