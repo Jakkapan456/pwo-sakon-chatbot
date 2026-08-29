@@ -90,7 +90,24 @@ st.markdown(f"""
     /* ซ่อนเฉพาะเมนูหลักและเครดิตด้านล่างอย่างปลอดภัย */
     #MainMenu {{ visibility: hidden; }}
     footer {{ visibility: hidden; }}
-    .stDeployButton {{ display: none !important; }}
+
+    /* 📌 ย่อขนาดปุ่มแดงและปุ่มม่วงให้เล็กและจางลง ไม่ให้เกะกะ */
+    .stAppDeployButton, 
+    [data-testid="stAppDeployButton"], 
+    div[class*="viewerBadge"] {{
+        transform: scale(0.6) !important; 
+        transform-origin: bottom right !important; 
+        opacity: 0.3 !important; 
+        transition: all 0.3s ease !important;
+        z-index: 999 !important;
+    }}
+    
+    .stAppDeployButton:hover, 
+    [data-testid="stAppDeployButton"]:hover, 
+    div[class*="viewerBadge"]:hover {{
+        opacity: 1 !important;
+        transform: scale(0.8) !important;
+    }}
 
     /* จัดรูปแบบกล่องแชท */
     [data-testid="stChatMessage"] {{
