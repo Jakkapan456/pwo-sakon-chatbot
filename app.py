@@ -67,7 +67,7 @@ if os.path.exists(lotus_img_path):
     with open(lotus_img_path, "rb") as f:
         lotus_base64 = base64.b64encode(f.read()).decode()
 
-# 3. ปรับแต่ง CSS หลักแบบปลอดภัย (ไม่ไปยุ่งกับ Header ของระบบ)
+# 3. ปรับแต่ง CSS หลักแบบปลอดภัย
 st.markdown(f"""
     <style>
     html, body {{
@@ -87,11 +87,9 @@ st.markdown(f"""
         padding-bottom: 8rem !important; 
     }}
 
-    /* ซ่อนเฉพาะเมนูหลักและเครดิตด้านล่างอย่างปลอดภัย */
     #MainMenu {{ visibility: hidden; }}
     footer {{ visibility: hidden; }}
 
-    /* 📌 ย่อขนาดปุ่มแดงและปุ่มม่วงให้เล็กและจางลง ไม่ให้เกะกะ */
     .stAppDeployButton, 
     [data-testid="stAppDeployButton"], 
     div[class*="viewerBadge"] {{
@@ -109,7 +107,6 @@ st.markdown(f"""
         transform: scale(0.8) !important;
     }}
 
-    /* จัดรูปแบบกล่องแชท */
     [data-testid="stChatMessage"] {{
         padding: 12px 16px !important;
         font-size: 15px !important;
@@ -124,7 +121,6 @@ st.markdown(f"""
         box-shadow: none !important;
     }}
 
-    /* แชทผู้ใช้ (User) */
     [data-testid="stChatMessage"]:has(div[aria-label="Chat message from user"]) {{
         background-color: #FFE4E1 !important;
         margin-left: auto !important;
@@ -135,7 +131,6 @@ st.markdown(f"""
         border: 1px solid #FFB6C1 !important;
     }}
 
-    /* แชทผู้ช่วย AI */
     [data-testid="stChatMessage"]:has(div[aria-label="Chat message from assistant"]) {{
         background-color: #FFFFFF !important;
         margin-left: 0 !important;
@@ -146,7 +141,6 @@ st.markdown(f"""
         border: 1px solid #FFD1DC !important;
     }}
     
-    /* 📱 ปรับแต่งสำหรับหน้าจอมือถือ */
     @media (max-width: 768px) {{
         .block-container {{
             padding-left: 1rem !important;
@@ -204,7 +198,44 @@ for message in st.session_state.messages:
             content = message["content"]
             extract_links_and_render(content)
 
-# 9. จัดการคำตอบ AI
+# 🚨 8.5 ย้ายสคริปต์ปิด Sidebar มาไว้ตรงนี้! 🚨
+# (ทำงานทันทีหลังจากปุ่มถูกกดและข้อความแสดง แต่ "ก่อน" ที่ AI จะเริ่มคิด)
+if len(st.session_state.messages) > 0:
+    components.html(
+        """
+        <script>
+            function forceCloseSidebarAndScroll() {
+                try {
+                    const doc = window.parent.document;
+                    
+                    // 1. กดปุ่มกากบาท / ลูกศรปิด (Close sidebar) ของมือถือ
+                    const closeBtn = doc.querySelector('button[aria-label="Close sidebar"]') || 
+                                     doc.querySelector('[data-testid="stSidebarHeader"] button');
+                    if (closeBtn) {
+                        closeBtn.click();
+                    }
+                    
+                    // 2. จำลองการกดปุ่ม ESC เผื่อไว้
+                    doc.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, code: 'Escape', bubbles: true }));
+                    
+                    // 3. เลื่อนหน้าจอแชทลงด้านล่าง
+                    const chatMessages = doc.querySelectorAll('[data-testid="stChatMessage"]');
+                    if (chatMessages.length > 0) {
+                        chatMessages[chatMessages.length - 1].scrollIntoView({ behavior: 'smooth', block: 'end' });
+                    }
+                } catch(e) {}
+            }
+            
+            // สั่งทำงานปุ๊บปั๊บทันที!
+            forceCloseSidebarAndScroll();
+            setTimeout(forceCloseSidebarAndScroll, 50);
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
+
+# 9. จัดการคำตอบ AI (ระบบจะมาถึงตรงนี้หลังจากที่หน้าต่าง Sidebar ถูกสั่งปิดไปแล้ว)
 if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
     last_user_msg = st.session_state.messages[-1]
     query_text = last_user_msg.get("prompt") or last_user_msg.get("text") or last_user_msg.get("content", "")
@@ -265,47 +296,3 @@ if prompt_container:
     if user_text or uploaded_files:
         st.session_state.messages.append(message_data)
         st.rerun()
-
-# 11. สคริปต์ JavaScript อัปเกรด: บังคับพับ Sidebar บนมือถือเมื่อกดปุ่ม
-if len(st.session_state.messages) > 0:
-    components.html(
-        """
-        <script>
-            function forceCloseSidebarAndScroll() {
-                try {
-                    const doc = window.parent.document;
-                    
-                    // 1. จำลองการกดปุ่ม ESC บนคีย์บอร์ด (เป็นวิธีที่ Streamlit มือถือใช้ปิด Sidebar ได้ชัวร์ที่สุด)
-                    doc.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, code: 'Escape', bubbles: true }));
-                    
-                    // 2. ถ้าเป็นหน้าจอมือถือ ให้ควานหาปุ่ม "กากบาท" หรือ "ลูกศรปิด" ของ Sidebar แล้วสั่งคลิก
-                    if (window.parent.innerWidth <= 768) {
-                        const closeBtn = doc.querySelector('button[aria-label="Close sidebar"]') || 
-                                         doc.querySelector('[data-testid="stSidebar"] button');
-                        if (closeBtn) {
-                            closeBtn.click();
-                        }
-                    }
-
-                    // 3. จำลองคลิกพื้นที่ว่างเผื่อไว้
-                    const mainArea = doc.querySelector('section.main');
-                    if (mainArea) {
-                        mainArea.click();
-                    }
-                    
-                    // 4. เลื่อนแชทล่าสุดให้เห็นชัดๆ
-                    const chatMessages = doc.querySelectorAll('[data-testid="stChatMessage"]');
-                    if (chatMessages.length > 0) {
-                        chatMessages[chatMessages.length - 1].scrollIntoView({ behavior: 'smooth', block: 'end' });
-                    }
-                } catch(e) {}
-            }
-            
-            // สั่งทำงานทันที และย้ำอีกรอบตอน AI กำลังพิมพ์ตอบ
-            setTimeout(forceCloseSidebarAndScroll, 100);
-            setTimeout(forceCloseSidebarAndScroll, 500);
-        </script>
-        """,
-        height=0,
-        width=0,
-    )
