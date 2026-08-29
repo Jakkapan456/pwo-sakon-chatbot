@@ -1,6 +1,6 @@
 import os
 import re
-import streamlit as st  # 📌 เพิ่มการเรียกใช้งาน streamlit
+import streamlit as st 
 from google import genai
 from google.genai import types
 
@@ -11,13 +11,12 @@ from knowledge_base_welfare_5 import LAW_WELFARE_KNOWLEDGE
 from knowledge_base_community_6 import LAW_COMMUNITY_KNOWLEDGE
 from knowledge_base_disabled_7 import LAW_DISABLED_KNOWLEDGE 
 
-# 📌 เปลี่ยนมาดึง API Key จาก Streamlit Secrets อย่างปลอดภัย
+# ดึง API Key จาก Streamlit Secrets อย่างปลอดภัย
 API_KEYS = [
     st.secrets["GEMINI_API_KEY_1"],
     st.secrets["GEMINI_API_KEY_2"]
 ]
 
-# 📌 กำหนดข้อความความรู้พื้นฐาน (แทนส่วนของ knowledge_base 1 ที่ลบไป)
 SYSTEM_KNOWLEDGE = """
 ข้อมูลพื้นฐานสำนักงานพัฒนาสังคมและความมั่นคงของมนุษย์จังหวัดสกลนคร (พมจ.สกลนคร):
 มีหน้าที่ในการขับเคลื่อนงานด้านสวัสดิการสังคม การคุ้มครองและพัฒนาคุณภาพชีวิตเด็ก เยาวชน สตรี ครอบครัว ผู้สูงอายุ คนพิการ และผู้ด้อยโอกาสในพื้นที่จังหวัดสกลนคร
@@ -33,29 +32,37 @@ def get_ai_response(contents):
         
     msg = user_message.lower().strip()
 
-    # 📌 ระบบคัดเลือกคลังความรู้เฉพาะหมวดที่เกี่ยวข้อง เพื่อประหยัด Quota Tokens ไม่ให้เกินลิมิต
+    # 🚀 ระบบคัดเลือกคลังความรู้เฉพาะหมวด (Retrieval) ให้ทำงานรวดเร็วและตรงจุด
     selected_knowledge = SYSTEM_KNOWLEDGE
+    matched = False
     
-    if any(keyword in msg for keyword in ["เด็ก", "แรกเกิด", "เยาวชน", "คุ้มครองเด็ก"]):
+    if any(keyword in msg for keyword in ["เด็ก", "แรกเกิด", "เยาวชน", "คุ้มครอง", "ทุนการศึกษา", "สถาน育"]):
         selected_knowledge += "\n" + LAW_CHILD_KNOWLEDGE
-    if any(keyword in msg for keyword in ["ครอบครัว", "สตรี", "ความรุนแรง", "สามีภรรยา"]):
+        matched = True
+    if any(keyword in msg for keyword in ["ครอบครัว", "สตรี", "ความรุนแรง", "สามี", "ภรรยา", "แม่เลี้ยงเดี่ยว"]):
         selected_knowledge += "\n" + LAW_DOMESTIC_VIOLENCE_KNOWLEDGE
-    if any(keyword in msg for keyword in ["ผู้สูงอายุ", "คนแก่", "เบี้ยยังชีพ"]):
+        matched = True
+    if any(keyword in msg for keyword in ["ผู้สูงอายุ", "คนแก่", "เบี้ยยังชีพ", "ผู้สูงวัย", "ฌาปนกิจ"]):
         selected_knowledge += "\n" + LAW_ELDERLY_KNOWLEDGE
-    if any(keyword in msg for keyword in ["สวัสดิการ", "สังคม", "สงเคราะห์"]):
+        matched = True
+    if any(keyword in msg for keyword in ["สวัสดิการ", "สังคม", "สงเคราะห์", "เงินช่วยเหลือ", "ยากจน", "ผู้ด้อยโอกาส"]):
         selected_knowledge += "\n" + LAW_WELFARE_KNOWLEDGE
-    if any(keyword in msg for keyword in ["ชุมชน", "อพม", "สภาองค์กรชุมชน", "พสช", "codi"]):
+        matched = True
+    if any(keyword in msg for keyword in ["ชุมชน", "อพม", "สภาองค์กร", "พสช", "codi", "กองทุน"]):
         selected_knowledge += "\n" + LAW_COMMUNITY_KNOWLEDGE
-    if any(keyword in msg for keyword in ["คนพิการ", "ความพิการ", "บัตรคนพิการ"]):
+        matched = True
+    if any(keyword in msg for keyword in ["คนพิการ", "ความพิการ", "บัตรคนพิการ", "เบี้ยความพิการ", "กู้ยืมเงินพิการ"]):
         selected_knowledge += "\n" + LAW_DISABLED_KNOWLEDGE
+        matched = True
     
-    # หากไม่ตรงหมวดไหนเลย หรือเป็นการทักทายทั่วไป ให้แนบความรู้หลักทั้งหมดแบบย่อส่วนผสมได้
-    if len(selected_knowledge) < len(SYSTEM_KNOWLEDGE) + 100:
+    # หากผู้ใช้ทักทายทั่วไปหรือพิมพ์นอกเหนือจากหมวดหมู่ ให้ดึงความรู้หลักทั้งหมดมาใช้แบบเต็มอิ่ม
+    if not matched:
         selected_knowledge = f"""
         {SYSTEM_KNOWLEDGE}
-        {LAW_CHILD_KNOWLEDGE[:1000]}
-        {LAW_COMMUNITY_KNOWLEDGE[:1000]}
-        {LAW_DISABLED_KNOWLEDGE[:1000]}
+        {LAW_CHILD_KNOWLEDGE}
+        {LAW_ELDERLY_KNOWLEDGE}
+        {LAW_DISABLED_KNOWLEDGE}
+        {LAW_WELFARE_KNOWLEDGE}
         """
 
     dynamic_system_instruction = f"""คุณคือ "AI ผู้ช่วยสิทธิสวัสดิการ พมจ.สกลนคร" สังกัดสำนักงานพัฒนาสังคมและความมั่นคงของมนุษย์จังหวัดสกลนคร
@@ -71,7 +78,7 @@ def get_ai_response(contents):
 {selected_knowledge}
 """
 
-    # ส่งตรงไปที่ Gemini API
+    # ส่งตรงไปที่ Gemini API (ใช้รุ่น gemini-1.5-flash เพื่อความเร็วสูงสุด)
     for key in API_KEYS:
         try:
             client = genai.Client(api_key=key)

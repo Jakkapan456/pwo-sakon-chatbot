@@ -18,7 +18,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 🚀 2. ระบบ Cache (ความจำชั่วคราว) สำหรับโหลดรูปภาพ ทำให้เว็บเร็วขึ้นมหาศาล
+# 🚀 2. ระบบ Cache (ความจำชั่วคราว) สำหรับโหลดรูปภาพ ทำให้เว็บเร็วขึ้น
 @st.cache_data(show_spinner=False)
 def get_cached_base64_image(image_path):
     if os.path.exists(image_path):
@@ -155,7 +155,7 @@ render_sidebar()
 if len(st.session_state.messages) == 0:
     render_header()
 
-# 🚀 7. ฟังก์ชันสร้าง QR Code (เปิดใช้งาน Cache เพื่อไม่ให้หน่วงเครื่องตอนสแกน)
+# 7. ฟังก์ชันสร้าง QR Code
 @st.cache_data(show_spinner=False)
 def generate_qrcode_image(url):
     qr = qrcode.QRCode(version=1, box_size=10, border=2)
@@ -192,7 +192,7 @@ for message in st.session_state.messages:
             content = message["content"]
             extract_links_and_render(content)
 
-# 9. จัดการคำตอบ AI
+# 9. จัดการคำตอบ AI (พร้อมระบบดักจับ Error ป้องกันการขัดข้อง)
 if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
     last_user_msg = st.session_state.messages[-1]
     query_text = last_user_msg.get("prompt") or last_user_msg.get("text") or last_user_msg.get("content", "")
@@ -223,8 +223,12 @@ if st.session_state.messages and st.session_state.messages[-1]["role"] == "user"
             """,
             unsafe_allow_html=True
         )
-        ai_stream = get_ai_response(ai_payload)
-        reply = message_placeholder.write_stream(ai_stream)
+        try:
+            ai_stream = get_ai_response(ai_payload)
+            reply = message_placeholder.write_stream(ai_stream)
+        except Exception as e:
+            reply = "ขออภัยครับ ระบบกำลังประมวลผลหนาแน่น กรุณาลองใหม่อีกครั้งครับ"
+            message_placeholder.markdown(reply)
         
     st.session_state.messages.append({"role": "assistant", "content": reply})
     st.rerun()
@@ -254,54 +258,40 @@ if prompt_container:
         st.session_state.messages.append(message_data)
         st.rerun()
 
-# 🚨 11. สคริปต์ JavaScript แบบฝังรากลึก (Global Event Listener) ทำงานทุกครั้ง 🚨
+# 🚨 11. สคริปต์ JavaScript ดักจับการคลิก (ปรับปรุงใหม่ให้ทำงานชัวร์และไม่ติดตัวอักษรซ่อน) 🚨
 components.html(
     """
     <script>
         const win = window.parent.window;
         const doc = window.parent.document;
         
-        // ตรวจสอบว่าเคยฝังคำสั่งนี้ไปหรือยัง เพื่อไม่ให้มันทำงานซ้ำซ้อน
         if (!win._globalSidebarListenerActive) {
-            
-            // ดักจับการคลิกทุกอย่างที่เกิดขึ้นในหน้าจอเว็บ (ทำงานตลอดกาล)
             doc.addEventListener('click', function(e) {
                 const sidebar = doc.querySelector('[data-testid="stSidebar"]');
-                
-                // ตรวจสอบว่าผู้ใช้คลิกโดนพื้นที่ "ภายใน Sidebar" ใช่หรือไม่
                 if (sidebar && sidebar.contains(e.target)) {
-                    
-                    // เช็คให้แน่ใจว่าคลิกโดน "ปุ่มคำถาม" (ไม่ใช่ปุ่มกากบาทปิดหน้าต่างด้านบน)
                     const isHeader = e.target.closest('[data-testid="stSidebarHeader"]');
                     const isClickable = e.target.closest('button') || e.target.closest('div[role="button"]');
                     
                     if (!isHeader && isClickable) {
-                        
-                        // รอเสี้ยววินาทีให้ระบบรับคำสั่งกล่องแชทไปก่อน แล้วจึงสั่ง "ปิดหน้าต่าง" ทันที
                         setTimeout(() => {
-                            // จำลองการกดปุ่ม X (กากบาท) หรือลูกศรปิด
                             const closeBtn = doc.querySelector('button[aria-label="Close sidebar"]') || 
+                                             doc.querySelector('button[aria-label="Collapse sidebar"]') ||
                                              doc.querySelector('[data-testid="stSidebarHeader"] button') ||
                                              doc.querySelector('button[kind="header"]');
                             if (closeBtn) {
                                 closeBtn.click();
                             }
-                            
-                            // ส่งคำสั่งกดยกเลิก (ESC) ซ้ำอีกชั้น เผื่อมือถือบางรุ่นไม่ตอบสนอง
                             doc.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, code: 'Escape', bubbles: true }));
                             
-                            // เลื่อนหน้าต่างแชทลงด้านล่างสุดให้สมูท
                             const mainArea = doc.querySelector('section.main');
                             if (mainArea) {
                                 mainArea.scrollTo({ top: mainArea.scrollHeight, behavior: 'smooth' });
                             }
-                        }, 150); 
+                        }, 100); 
                     }
                 }
-            }, true); // ใช้โหมด Capture ดักจับก่อนที่โค้ดอื่นๆ จะทำงาน
-            
-            // บันทึกสถานะว่าระบบดักจับทำงานแล้ว
-            win._globalSidebarListenerActive = true; 
+            }, true);
+            win._globalSidebarListenerActive = true;
         }
     </script>
     """,
