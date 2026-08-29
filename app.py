@@ -260,50 +260,55 @@ if prompt_container:
         st.session_state.messages.append(message_data)
         st.rerun()
 
-# 🚨 11. สคริปต์ดักจับการคลิก (พอกดปุ่มคำถามปุ๊บ สั่งปิดหน้าต่างพร้อมกันทันที!) 🚨
+# 🚨 11. สคริปต์ JavaScript แบบฝังรากลึก (Global Event Listener) ทำงานทุกครั้ง 🚨
 components.html(
     """
     <script>
-        function bindSidebarButtons() {
-            try {
-                const doc = window.parent.document;
+        const win = window.parent.window;
+        const doc = window.parent.document;
+        
+        // ตรวจสอบว่าเคยฝังคำสั่งนี้ไปหรือยัง เพื่อไม่ให้มันทำงานซ้ำซ้อน
+        if (!win._globalSidebarListenerActive) {
+            
+            // ดักจับการคลิกทุกอย่างที่เกิดขึ้นในหน้าจอเว็บ (ทำงานตลอดกาล)
+            doc.addEventListener('click', function(e) {
                 const sidebar = doc.querySelector('[data-testid="stSidebar"]');
                 
-                // ถ้ายืนยันว่าเจอเมนู Sidebar และยังไม่ได้ฝังคำสั่ง
-                if (sidebar && !sidebar.dataset.bound) {
+                // ตรวจสอบว่าผู้ใช้คลิกโดนพื้นที่ "ภายใน Sidebar" ใช่หรือไม่
+                if (sidebar && sidebar.contains(e.target)) {
                     
-                    // ดักรอจังหวะที่ผู้ใช้ "คลิก" อะไรก็ตามในเมนูซ้ายมือ
-                    sidebar.addEventListener('click', function(e) {
+                    // เช็คให้แน่ใจว่าคลิกโดน "ปุ่มคำถาม" (ไม่ใช่ปุ่มกากบาทปิดหน้าต่างด้านบน)
+                    const isHeader = e.target.closest('[data-testid="stSidebarHeader"]');
+                    const isClickable = e.target.closest('button') || e.target.closest('div[role="button"]');
+                    
+                    if (!isHeader && isClickable) {
                         
-                        // เช็คว่าสิ่งที่คลิกคือ "ปุ่มคำถาม" ใช่หรือไม่ (ยกเว้นปุ่มปิดหน้าต่างปกติ)
-                        const clickedButton = e.target.closest('button');
-                        const isCloseButton = e.target.closest('[data-testid="stSidebarHeader"]');
-                        
-                        if (clickedButton && !isCloseButton) {
-                            // 💥 ทันทีที่กดปุ่มคำถาม ให้สคริปต์ไปกดย้ำที่ปุ่มปิดหน้าต่างด้วย! 💥
+                        // รอเสี้ยววินาทีให้ระบบรับคำสั่งกล่องแชทไปก่อน แล้วจึงสั่ง "ปิดหน้าต่าง" ทันที
+                        setTimeout(() => {
+                            // จำลองการกดปุ่ม X (กากบาท) หรือลูกศรปิด
                             const closeBtn = doc.querySelector('button[aria-label="Close sidebar"]') || 
                                              doc.querySelector('[data-testid="stSidebarHeader"] button') ||
                                              doc.querySelector('button[kind="header"]');
                             if (closeBtn) {
-                                closeBtn.click(); // ปิดหน้าต่างทันทีเหมือนเอานิ้วกดเอง!
+                                closeBtn.click();
                             }
                             
-                            // เลื่อนหน้าต่างแชทลงด้านล่างสุดด้วยเพื่อความสมูท
-                            setTimeout(() => {
-                                const mainArea = doc.querySelector('section.main');
-                                if (mainArea) mainArea.scrollTo({ top: mainArea.scrollHeight, behavior: 'smooth' });
-                            }, 300);
-                        }
-                    });
-                    
-                    sidebar.dataset.bound = "true"; // มาร์คไว้ว่าสคริปต์ดักจับทำงานแล้ว
+                            // ส่งคำสั่งกดยกเลิก (ESC) ซ้ำอีกชั้น เผื่อมือถือบางรุ่นไม่ตอบสนอง
+                            doc.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, code: 'Escape', bubbles: true }));
+                            
+                            // เลื่อนหน้าต่างแชทลงด้านล่างสุดให้สมูท
+                            const mainArea = doc.querySelector('section.main');
+                            if (mainArea) {
+                                mainArea.scrollTo({ top: mainArea.scrollHeight, behavior: 'smooth' });
+                            }
+                        }, 150); 
+                    }
                 }
-            } catch (error) {}
+            }, true); // ใช้โหมด Capture ดักจับก่อนที่โค้ดอื่นๆ จะทำงาน
+            
+            // บันทึกสถานะว่าระบบดักจับทำงานแล้ว
+            win._globalSidebarListenerActive = true; 
         }
-        
-        // ให้ฟังก์ชันคอยตรวจจับตลอดเวลา เผื่อมีการโหลดหน้าจอใหม่
-        bindSidebarButtons();
-        setInterval(bindSidebarButtons, 1000);
     </script>
     """,
     height=0,
