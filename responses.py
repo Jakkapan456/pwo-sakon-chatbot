@@ -32,11 +32,11 @@ def get_ai_response(contents):
         
     msg = user_message.lower().strip()
 
-    # 🚀 ระบบคัดเลือกคลังความรู้เฉพาะหมวด (Retrieval) ให้ทำงานรวดเร็วและตรงจุด
+    # 🚀 ระบบคัดเลือกคลังความรู้เฉพาะหมวด (Retrieval)
     selected_knowledge = SYSTEM_KNOWLEDGE
     matched = False
     
-    if any(keyword in msg for keyword in ["เด็ก", "แรกเกิด", "เยาวชน", "คุ้มครอง", "ทุนการศึกษา", "สถาน育"]):
+    if any(keyword in msg for keyword in ["เด็ก", "แรกเกิด", "เยาวชน", "คุ้มครอง", "ทุนการศึกษา", "สถานสงเคราะห์"]):
         selected_knowledge += "\n" + LAW_CHILD_KNOWLEDGE
         matched = True
     if any(keyword in msg for keyword in ["ครอบครัว", "สตรี", "ความรุนแรง", "สามี", "ภรรยา", "แม่เลี้ยงเดี่ยว"]):
@@ -55,7 +55,6 @@ def get_ai_response(contents):
         selected_knowledge += "\n" + LAW_DISABLED_KNOWLEDGE
         matched = True
     
-    # หากผู้ใช้ทักทายทั่วไปหรือพิมพ์นอกเหนือจากหมวดหมู่ ให้ดึงความรู้หลักทั้งหมดมาใช้แบบเต็มอิ่ม
     if not matched:
         selected_knowledge = f"""
         {SYSTEM_KNOWLEDGE}
@@ -78,7 +77,7 @@ def get_ai_response(contents):
 {selected_knowledge}
 """
 
-    # ส่งตรงไปที่ Gemini API (ใช้รุ่น gemini-1.5-flash เพื่อความเร็วสูงสุด)
+    # ส่งตรงไปที่ Gemini API (ใช้รุ่น gemini-1.5-flash ที่มีความเสถียรและรวดเร็วสูง)
     for key in API_KEYS:
         try:
             client = genai.Client(api_key=key)
@@ -93,7 +92,7 @@ def get_ai_response(contents):
             )
             has_content = False
             for chunk in response:
-                if chunk.text:
+                if chunk and hasattr(chunk, 'text') and chunk.text:
                     has_content = True
                     yield chunk.text
             if has_content:
