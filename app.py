@@ -266,29 +266,44 @@ if prompt_container:
         st.session_state.messages.append(message_data)
         st.rerun()
 
-# 11. สคริปต์ JavaScript เฉพาะสำหรับเลื่อนแชทและพับเมนูอย่างปลอดภัย
+# 11. สคริปต์ JavaScript อัปเกรด: บังคับพับ Sidebar บนมือถือเมื่อกดปุ่ม
 if len(st.session_state.messages) > 0:
     components.html(
         """
         <script>
-            function autoScrollAndCloseMenu() {
+            function forceCloseSidebarAndScroll() {
                 try {
                     const doc = window.parent.document;
                     
-                    // สั่งพับ Sidebar เมื่อมีข้อความใหม่
+                    // 1. จำลองการกดปุ่ม ESC บนคีย์บอร์ด (เป็นวิธีที่ Streamlit มือถือใช้ปิด Sidebar ได้ชัวร์ที่สุด)
+                    doc.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, code: 'Escape', bubbles: true }));
+                    
+                    // 2. ถ้าเป็นหน้าจอมือถือ ให้ควานหาปุ่ม "กากบาท" หรือ "ลูกศรปิด" ของ Sidebar แล้วสั่งคลิก
+                    if (window.parent.innerWidth <= 768) {
+                        const closeBtn = doc.querySelector('button[aria-label="Close sidebar"]') || 
+                                         doc.querySelector('[data-testid="stSidebar"] button');
+                        if (closeBtn) {
+                            closeBtn.click();
+                        }
+                    }
+
+                    // 3. จำลองคลิกพื้นที่ว่างเผื่อไว้
                     const mainArea = doc.querySelector('section.main');
                     if (mainArea) {
                         mainArea.click();
                     }
                     
-                    // เลื่อนแชทลงล่างสุด
+                    // 4. เลื่อนแชทล่าสุดให้เห็นชัดๆ
                     const chatMessages = doc.querySelectorAll('[data-testid="stChatMessage"]');
                     if (chatMessages.length > 0) {
                         chatMessages[chatMessages.length - 1].scrollIntoView({ behavior: 'smooth', block: 'end' });
                     }
                 } catch(e) {}
             }
-            setTimeout(autoScrollAndCloseMenu, 300);
+            
+            // สั่งทำงานทันที และย้ำอีกรอบตอน AI กำลังพิมพ์ตอบ
+            setTimeout(forceCloseSidebarAndScroll, 100);
+            setTimeout(forceCloseSidebarAndScroll, 500);
         </script>
         """,
         height=0,
