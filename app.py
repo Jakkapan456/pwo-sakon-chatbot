@@ -198,44 +198,7 @@ for message in st.session_state.messages:
             content = message["content"]
             extract_links_and_render(content)
 
-# 🚨 8.5 ย้ายสคริปต์ปิด Sidebar มาไว้ตรงนี้! 🚨
-# (ทำงานทันทีหลังจากปุ่มถูกกดและข้อความแสดง แต่ "ก่อน" ที่ AI จะเริ่มคิด)
-if len(st.session_state.messages) > 0:
-    components.html(
-        """
-        <script>
-            function forceCloseSidebarAndScroll() {
-                try {
-                    const doc = window.parent.document;
-                    
-                    // 1. กดปุ่มกากบาท / ลูกศรปิด (Close sidebar) ของมือถือ
-                    const closeBtn = doc.querySelector('button[aria-label="Close sidebar"]') || 
-                                     doc.querySelector('[data-testid="stSidebarHeader"] button');
-                    if (closeBtn) {
-                        closeBtn.click();
-                    }
-                    
-                    // 2. จำลองการกดปุ่ม ESC เผื่อไว้
-                    doc.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, code: 'Escape', bubbles: true }));
-                    
-                    // 3. เลื่อนหน้าจอแชทลงด้านล่าง
-                    const chatMessages = doc.querySelectorAll('[data-testid="stChatMessage"]');
-                    if (chatMessages.length > 0) {
-                        chatMessages[chatMessages.length - 1].scrollIntoView({ behavior: 'smooth', block: 'end' });
-                    }
-                } catch(e) {}
-            }
-            
-            // สั่งทำงานปุ๊บปั๊บทันที!
-            forceCloseSidebarAndScroll();
-            setTimeout(forceCloseSidebarAndScroll, 50);
-        </script>
-        """,
-        height=0,
-        width=0,
-    )
-
-# 9. จัดการคำตอบ AI (ระบบจะมาถึงตรงนี้หลังจากที่หน้าต่าง Sidebar ถูกสั่งปิดไปแล้ว)
+# 9. จัดการคำตอบ AI
 if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
     last_user_msg = st.session_state.messages[-1]
     query_text = last_user_msg.get("prompt") or last_user_msg.get("text") or last_user_msg.get("content", "")
@@ -296,3 +259,53 @@ if prompt_container:
     if user_text or uploaded_files:
         st.session_state.messages.append(message_data)
         st.rerun()
+
+# 🚨 11. สคริปต์ดักจับการคลิก (พอกดปุ่มคำถามปุ๊บ สั่งปิดหน้าต่างพร้อมกันทันที!) 🚨
+components.html(
+    """
+    <script>
+        function bindSidebarButtons() {
+            try {
+                const doc = window.parent.document;
+                const sidebar = doc.querySelector('[data-testid="stSidebar"]');
+                
+                // ถ้ายืนยันว่าเจอเมนู Sidebar และยังไม่ได้ฝังคำสั่ง
+                if (sidebar && !sidebar.dataset.bound) {
+                    
+                    // ดักรอจังหวะที่ผู้ใช้ "คลิก" อะไรก็ตามในเมนูซ้ายมือ
+                    sidebar.addEventListener('click', function(e) {
+                        
+                        // เช็คว่าสิ่งที่คลิกคือ "ปุ่มคำถาม" ใช่หรือไม่ (ยกเว้นปุ่มปิดหน้าต่างปกติ)
+                        const clickedButton = e.target.closest('button');
+                        const isCloseButton = e.target.closest('[data-testid="stSidebarHeader"]');
+                        
+                        if (clickedButton && !isCloseButton) {
+                            // 💥 ทันทีที่กดปุ่มคำถาม ให้สคริปต์ไปกดย้ำที่ปุ่มปิดหน้าต่างด้วย! 💥
+                            const closeBtn = doc.querySelector('button[aria-label="Close sidebar"]') || 
+                                             doc.querySelector('[data-testid="stSidebarHeader"] button') ||
+                                             doc.querySelector('button[kind="header"]');
+                            if (closeBtn) {
+                                closeBtn.click(); // ปิดหน้าต่างทันทีเหมือนเอานิ้วกดเอง!
+                            }
+                            
+                            // เลื่อนหน้าต่างแชทลงด้านล่างสุดด้วยเพื่อความสมูท
+                            setTimeout(() => {
+                                const mainArea = doc.querySelector('section.main');
+                                if (mainArea) mainArea.scrollTo({ top: mainArea.scrollHeight, behavior: 'smooth' });
+                            }, 300);
+                        }
+                    });
+                    
+                    sidebar.dataset.bound = "true"; // มาร์คไว้ว่าสคริปต์ดักจับทำงานแล้ว
+                }
+            } catch (error) {}
+        }
+        
+        // ให้ฟังก์ชันคอยตรวจจับตลอดเวลา เผื่อมีการโหลดหน้าจอใหม่
+        bindSidebarButtons();
+        setInterval(bindSidebarButtons, 1000);
+    </script>
+    """,
+    height=0,
+    width=0,
+)
