@@ -82,7 +82,7 @@ def get_ai_response(contents):
         try:
             client = genai.Client(api_key=key)
             response = client.models.generate_content_stream(
-                model="gemini-1.5-flash",
+                model="gemini-3.6-flash",
                 contents=contents,
                 config=types.GenerateContentConfig(
                     system_instruction=dynamic_system_instruction,
