@@ -258,7 +258,7 @@ if prompt_container:
         st.session_state.messages.append(message_data)
         st.rerun()
 
-# 🚨 11. สคริปต์ JavaScript ดักจับการคลิก (ปรับปรุงใหม่ให้ทำงานชัวร์และไม่ติดตัวอักษรซ่อน) 🚨
+# 🚨 11. สคริปต์ JavaScript ดักจับการคลิก (ปรับปรุงใหม่: ยกเว้นกล่องสวัสดิการทั่วไปและกรมต่างๆ) 🚨
 components.html(
     """
     <script>
@@ -269,15 +269,33 @@ components.html(
             doc.addEventListener('click', function(e) {
                 const sidebar = doc.querySelector('[data-testid="stSidebar"]');
                 if (sidebar && sidebar.contains(e.target)) {
-                    const isHeader = e.target.closest('[data-testid="stSidebarHeader"]');
-                    const isClickable = e.target.closest('button') || e.target.closest('div[role="button"]');
                     
-                    if (!isHeader && isClickable) {
+                    // 1. ถ้าคลิกตรงส่วนหัว (Header) ให้ปล่อยผ่าน
+                    const isHeader = e.target.closest('[data-testid="stSidebarHeader"]');
+                    if (isHeader) return;
+
+                    // 2. ตรวจสอบว่าสิ่งที่คลิกคือปุ่ม หรือแถบกางลิ้นชัก (summary)
+                    const isClickable = e.target.closest('button') || e.target.closest('div[role="button"]') || e.target.closest('summary');
+                    
+                    if (isClickable) {
+                        const buttonText = isClickable.innerText || isClickable.textContent || "";
+                        
+                        // 3. เงื่อนไขยกเว้น: ถ้าคลิกโดนกล่องที่มีคำเหล่านี้ หรือเป็นแถบกางลิ้นชัก ห้ามหุบจอเด็ดขาด
+                        if (buttonText.includes("ข้อมูลสิทธิสวัสดิการทั่วไป") || 
+                            buttonText.includes("กรมกิจการ") || 
+                            buttonText.includes("กรมส่งเสริม") || 
+                            buttonText.includes("กรมพัฒนา") || 
+                            buttonText.includes("สำนักงานปลัด") ||
+                            e.target.closest('summary')) {
+                            return; // หยุดการทำงานตรงนี้ ปล่อยให้ลิ้นชักกางออก
+                        }
+
+                        // 4. ถ้าเป็นปุ่มอื่นๆ นอกเหนือจากด้านบน ให้สั่งหุบจอด้านข้างตามปกติ
                         setTimeout(() => {
                             const closeBtn = doc.querySelector('button[aria-label="Close sidebar"]') || 
-                                             doc.querySelector('button[aria-label="Collapse sidebar"]') ||
-                                             doc.querySelector('[data-testid="stSidebarHeader"] button') ||
-                                             doc.querySelector('button[kind="header"]');
+                                           doc.querySelector('button[aria-label="Collapse sidebar"]') ||
+                                           doc.querySelector('[data-testid="stSidebarHeader"] button') ||
+                                           doc.querySelector('button[kind="header"]');
                             if (closeBtn) {
                                 closeBtn.click();
                             }
@@ -287,7 +305,7 @@ components.html(
                             if (mainArea) {
                                 mainArea.scrollTo({ top: mainArea.scrollHeight, behavior: 'smooth' });
                             }
-                        }, 100); 
+                        }, 150); 
                     }
                 }
             }, true);
